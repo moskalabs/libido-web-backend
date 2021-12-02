@@ -6,7 +6,6 @@ from core.models    import TimeStampModel
 class User(TimeStampModel):
     email                      = models.EmailField(max_length=250, unique=True)
     password                   = models.CharField(max_length=300, null=True)
-    reset_password_auth_number = models.CharField(max_length=30, null=True)
     phone_number               = models.CharField(max_length=30)
     nickname                   = models.CharField(max_length=30, unique=True)
     profile_image_url          = models.URLField(max_length=2000, null=True)
