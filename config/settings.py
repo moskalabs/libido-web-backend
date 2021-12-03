@@ -2,7 +2,7 @@ from pathlib import Path
 import pymysql
 pymysql.install_as_MySQLdb()
 
-from my_settings import DATABASES, SECRET_KEY, ALGORITHM
+from my_settings import DATABASES, SECRET_KEY, ALGORITHM, YOUTUBE_DATA_API_KEY
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -11,8 +11,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = SECRET_KEY
-ALGORITHM = ALGORITHM
+SECRET_KEY           = SECRET_KEY
+ALGORITHM            = ALGORITHM
+YOUTUBE_DATA_API_KEY = YOUTUBE_DATA_API_KEY
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
