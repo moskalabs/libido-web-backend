@@ -364,3 +364,7 @@ my_settings.py
 
 ## .vscode
 .vscode/
+
+db_uploader.py
+csv/
+macro.py
