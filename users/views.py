@@ -1,4 +1,5 @@
 import json, requests, re, bcrypt
+from math import log
 import hashlib, hmac, base64, time
 
 from django.views    import View
@@ -88,6 +89,7 @@ class SignupView(View):
                 password     = hashed_password,
                 nickname     = nickname,
                 phone_number = phone_number,
+                login_method = 'libido'
             )
             
             return JsonResponse({"message" : "SUCCESS"}, status=201)
