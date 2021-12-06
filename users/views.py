@@ -1,4 +1,5 @@
-import json, requests, re, bcrypt
+import json, requests, re, bcrypt, jwt
+from django.core.exceptions import MultipleObjectsReturned
 from math import log
 import hashlib, hmac, base64, time
 
@@ -95,4 +96,25 @@ class SignupView(View):
             return JsonResponse({"message" : "SUCCESS"}, status=201)
 
         except KeyError:
-            return JsonResponse({"message" : "KEY_ERROR"}, status=401)     
+            return JsonResponse({"message" : "KEY_ERROR"}, status=401) 
+
+class SigninView(View):
+    def post(self, request):
+        try:
+            data     = json.loads(request.body)
+
+            email    = data["email"]
+            password = data["password"]
+            user = User.objects.get(email=email)
+            
+            if not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
+                return JsonResponse({"message" : "INVALID_USER_OR_INVALID_PASSWORD"}, status=401)
+
+            access_token = jwt.encode({"id" : user.id}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+            return JsonResponse({"message" : "SUCCESS", "ACCESS_TOKEN" : access_token}, status=200)
+                
+        except User.DoesNotExist:
+            return JsonResponse({"message" : "USER_DOES_NOT_EXISTS"}, status=401) 
+
+        except KeyError:
+            return JsonResponse({"message" : "KEY_ERROR"}, status=401)
