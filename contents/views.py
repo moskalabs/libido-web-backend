@@ -10,7 +10,7 @@ from .models           import *
 
 class SearchContentView(View):
     def get(self, request):
-        keyword       = request.GET.get('keyword')
+        keyword = request.GET.get('keyword')
         OFFSET  = request.GET.get("page")
         LIMIT   = int(request.GET.get("limit", 50))
 

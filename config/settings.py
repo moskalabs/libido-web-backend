@@ -1,9 +1,12 @@
+import os
+
 from pathlib import Path
 import pymysql
 pymysql.install_as_MySQLdb()
 
 from my_settings import DATABASES, SECRET_KEY, ALGORITHM, YOUTUBE_DATA_API_KEY, \
     SERVICE_ID, ACCESS_KEY, ACCESS_SECRET_KEY, COMPANY_NUMBER
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -46,6 +49,7 @@ PROJECT_APPS = [
 
 THIRD_PARTY_APPS = [
     'corsheaders',
+    'django_crontab',
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
@@ -153,3 +157,8 @@ CORS_ALLOW_HEADERS = (
     'x-csrftoken',
     'x-requested-with',
 )
+
+# CRONTAB
+CRONJOBS = [
+    ('0 0,6,12,18 * * *', 'config.cron.popular_videos_get_youtube_api', '>> '+os.path.join(BASE_DIR, 'config/log/cron.log'))
+]
