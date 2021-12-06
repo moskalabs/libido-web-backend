@@ -367,4 +367,5 @@ my_settings.py
 
 db_uploader.py
 csv/
-macro.py
+
+/config/log
