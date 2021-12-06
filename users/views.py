@@ -29,7 +29,7 @@ class SendSMSView(View):
         try:
             data        = json.loads(request.body)
             auth_number = randint(1000,10000)
-
+            
             messages    = { 'to' : data['phone_number']}
             
             headers     = {
@@ -119,3 +119,28 @@ class SigninView(View):
 
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)
+
+class ResetPasswordView(View):
+    def post(self, request):
+        try:
+            data = json.loads(request.body)
+            email        = data["email"]
+            password     = data["password"]
+            re_password  = data["re_password"]
+            
+            if password != re_password:
+                return JsonResponse({"message" : "PASSWORD_MISMATCH_ERROR"}, status = 400)
+
+            if not re.match('^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~₩!@#$%^&*()\-_=+])[a-zA-Z0-9~!@#$%^&*()_\-+=]{8,17}$', password):
+                return JsonResponse({"message" : "PASSWORD_VALIDATION_ERROR"}, status=400)
+        
+            user = User.objects.get(email=email)
+            user.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            user.save()
+            
+            return JsonResponse({"message" : "SUCCESS"}, status=200)
+
+        except KeyError:
+            return JsonResponse({"message" : "KEY_ERROR"}, status=401)
+        except User.DoesNotExist:
+            return JsonResponse({"message" : "USER_DOES_NOT_EXISTS"}, status=401)
