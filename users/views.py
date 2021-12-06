@@ -94,8 +94,5 @@ class SignupView(View):
             
             return JsonResponse({"message" : "SUCCESS"}, status=201)
 
-        except User.DoesNotExist:
-            return JsonResponse({"message" : "USER_DOES_NOT_EXISTS"}, status=401) 
-
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)     
