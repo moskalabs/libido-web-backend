@@ -1,12 +1,10 @@
 import json, requests, re, bcrypt, jwt
-from django.core.exceptions import MultipleObjectsReturned
-from math import log
 import hashlib, hmac, base64, time
+from random          import randint
 
 from django.views    import View
 from django.http     import JsonResponse
 from django.conf     import settings
-from random          import randint
 
 from .models         import User
 
@@ -83,6 +81,9 @@ class SignupView(View):
             if User.objects.filter(email=email).exists():
                 return JsonResponse({"message" : "DUPLICATION_ERROR"}, status=400)
 
+            if User.objects.filter(nickname=nickname).exists():
+                return JsonResponse({"message" : "DUPLICATION_ERROR"}, status=400)
+
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
             User.objects.create(
@@ -102,9 +103,9 @@ class SigninView(View):
     def post(self, request):
         try:
             data     = json.loads(request.body)
-
             email    = data["email"]
             password = data["password"]
+
             user = User.objects.get(email=email)
             
             if not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
