@@ -7,6 +7,8 @@ from django.http     import JsonResponse
 from django.conf     import settings
 
 from .models         import User
+import smtplib  
+from email.mime.text import MIMEText
 
 timestamp    = str(int(time.time() * 1000))
 
@@ -120,10 +122,34 @@ class SigninView(View):
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)
 
+class SendEmailView(View):
+    def post(self, request):
+        try:
+            data  = json.loads(request.body)
+            email = data['email']
+            
+            User.objects.get(email=email)
+            
+            auth_number = randint(100000,1000000)
+            
+            smtp = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+            smtp.starttls()
+            smtp.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+            msg = MIMEText(f'[인증번호] : {auth_number}')
+            msg['Subject'] = 'Moska 비밀번호 재설정 안내'
+            smtp.sendmail(settings.EMAIL_HOST_USER, email, msg.as_string())
+            smtp.quit()
+            return JsonResponse({'auth_number' : auth_number}, status=200)
+        
+        except KeyError:
+            return JsonResponse({'message' : "KEY_ERROR"}, status=401)
+        except User.DoesNotExist:
+            return JsonResponse({'message' : "USER_DOES_NOT_EXISTS"}, status=401)
+
 class ResetPasswordView(View):
     def post(self, request):
         try:
-            data = json.loads(request.body)
+            data         = json.loads(request.body)
             email        = data["email"]
             password     = data["password"]
             re_password  = data["re_password"]
