@@ -7,8 +7,8 @@ from django.http     import JsonResponse
 from django.conf     import settings
 
 from .models         import User
-
-timestamp    = str(int(time.time() * 1000))
+import smtplib  
+from email.mime.text import MIMEText
 
 service_id   = settings.SERVICE_ID
 access_key   = settings.ACCESS_KEY
@@ -17,38 +17,39 @@ uri          = f'/sms/v2/services/{service_id}/messages'
 api_url      = f'https://sens.apigw.ntruss.com{uri}'
 
 def make_signature(uri, access_key):
+    timestamp         = str(int(time.time() * 1000))
     access_secret_key = bytes(settings.ACCESS_SECRET_KEY, 'UTF-8')
     message           = "POST" + " " + uri + "\n" + timestamp + "\n" + access_key
     message           = bytes(message, 'UTF-8')
     signin_key        = base64.b64encode(hmac.new(
         access_secret_key, message, digestmod=hashlib.sha256).digest())
-    return signin_key 
+    return signin_key, timestamp 
 
 class SendSMSView(View):
     def post(self, request):
         try:
-            data        = json.loads(request.body)
-            auth_number = randint(1000,10000)
-
-            messages    = { 'to' : data['phone_number']}
+            data               = json.loads(request.body)
+            auth_number        = randint(1000,10000)
+            signkey, timestamp = make_signature(uri, access_key)
+            messages           = { 'to' : data['phone_number']}
             
-            headers     = {
+            headers            = {
                 "Content-Type"             : "application/json; charset=utf-8",
                 "x-ncp-apigw-timestamp"    : timestamp,
                 "x-ncp-iam-access-key"     : access_key,
-                "x-ncp-apigw-signature-v2" : make_signature(uri, access_key)
+                "x-ncp-apigw-signature-v2" : signkey
             }
 
-            body = {
+            body               = {
                 "type"        : "SMS",
                 "contentType" : "COMM",
                 "from"        : settings.COMPANY_NUMBER,
                 "content"     : "인증번호 [{}]를 입력해 주세요.".format(auth_number),
                 "messages"    : [messages]
             }
-
+            
             json_body = json.dumps(body)
-
+            
             requests.post(api_url, headers = headers, data=json_body)
 
             return JsonResponse({'auth_number' : auth_number}, status = 200)
@@ -119,3 +120,52 @@ class SigninView(View):
 
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)
+
+class SendEmailView(View):
+    def post(self, request):
+        try:
+            data  = json.loads(request.body)
+            email = data['email']
+            
+            User.objects.get(email=email)
+            
+            auth_number = randint(100000,1000000)
+            
+            smtp = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
+            smtp.starttls()
+            smtp.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
+            msg = MIMEText(f'[인증번호] : {auth_number}')
+            msg['Subject'] = 'Moska 비밀번호 재설정 안내'
+            smtp.sendmail(settings.EMAIL_HOST_USER, email, msg.as_string())
+            smtp.quit()
+            return JsonResponse({'auth_number' : auth_number}, status=200)
+        
+        except KeyError:
+            return JsonResponse({'message' : "KEY_ERROR"}, status=401)
+        except User.DoesNotExist:
+            return JsonResponse({'message' : "USER_DOES_NOT_EXISTS"}, status=401)
+
+class ResetPasswordView(View):
+    def post(self, request):
+        try:
+            data         = json.loads(request.body)
+            email        = data["email"]
+            password     = data["password"]
+            re_password  = data["re_password"]
+            
+            if password != re_password:
+                return JsonResponse({"message" : "PASSWORD_MISMATCH_ERROR"}, status = 400)
+
+            if not re.match('^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~₩!@#$%^&*()\-_=+])[a-zA-Z0-9~!@#$%^&*()_\-+=]{8,17}$', password):
+                return JsonResponse({"message" : "PASSWORD_VALIDATION_ERROR"}, status=400)
+        
+            user = User.objects.get(email=email)
+            user.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
+            user.save()
+            
+            return JsonResponse({"message" : "SUCCESS"}, status=200)
+
+        except KeyError:
+            return JsonResponse({"message" : "KEY_ERROR"}, status=401)
+        except User.DoesNotExist:
+            return JsonResponse({"message" : "USER_DOES_NOT_EXISTS"}, status=401)
