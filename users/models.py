@@ -12,6 +12,7 @@ class User(TimeStampModel):
     login_method               = models.CharField(max_length=30, null=True)
     platform_id                = models.CharField(max_length=30, null=True)
     description                = models.TextField(null=True)
+    reset_token_number         = models.CharField(max_length=30, null=True)
     user_histories             = models.ManyToManyField('rooms.Room', through="rooms.UserRoomHistory", related_name="users_histories")
     
     class Meta:
