@@ -4,8 +4,8 @@ from pathlib import Path
 import pymysql
 pymysql.install_as_MySQLdb()
 
-from my_settings import DATABASES, SECRET_KEY, ALGORITHM, YOUTUBE_DATA_API_KEY, \
-    SERVICE_ID, ACCESS_KEY, ACCESS_SECRET_KEY, COMPANY_NUMBER
+from my_settings import DATABASES, EMAIL_HOST, EMAIL_PORT, SECRET_KEY, ALGORITHM, YOUTUBE_DATA_API_KEY, \
+    SERVICE_ID, ACCESS_KEY, ACCESS_SECRET_KEY, COMPANY_NUMBER, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -15,6 +15,12 @@ SERVICE_ID = SERVICE_ID
 ACCESS_KEY = ACCESS_KEY
 ACCESS_SECRET_KEY = ACCESS_SECRET_KEY
 COMPANY_NUMBER = COMPANY_NUMBER
+
+# EMAIL
+EMAIL_HOST = EMAIL_HOST
+EMAIL_PORT = EMAIL_PORT
+EMAIL_HOST_USER = EMAIL_HOST_USER
+EMAIL_HOST_PASSWORD = EMAIL_HOST_PASSWORD
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.2/howto/deployment/checklist/
