@@ -1,4 +1,4 @@
-import json, requests, re, bcrypt, jwt
+import json, requests, re, bcrypt, jwt, uuid
 import hashlib, hmac, base64, time
 from random          import randint
 
@@ -124,20 +124,25 @@ class SigninView(View):
 class SendEmailView(View):
     def post(self, request):
         try:
-            data  = json.loads(request.body)
-            email = data['email']
-            
-            User.objects.get(email=email)
-            
-            auth_number = randint(100000,1000000)
+            email = json.loads(request.body)['email']
+        
+            auth_number = uuid.uuid4().hex[:10]
             
             smtp = smtplib.SMTP(settings.EMAIL_HOST, settings.EMAIL_PORT)
             smtp.starttls()
             smtp.login(settings.EMAIL_HOST_USER, settings.EMAIL_HOST_PASSWORD)
-            msg = MIMEText(f'[인증번호] : {auth_number}')
-            msg['Subject'] = 'Moska 비밀번호 재설정 안내'
+
+            msg            = MIMEText(f'[인증번호] : {auth_number}')
+            msg['Subject'] = 'Libido 비밀번호 재설정 안내'
+
             smtp.sendmail(settings.EMAIL_HOST_USER, email, msg.as_string())
             smtp.quit()
+
+            user = User.objects.get(email=email)
+
+            user.reset_token_number = auth_number
+            user.save()
+            
             return JsonResponse({'auth_number' : auth_number}, status=200)
         
         except KeyError:
@@ -148,18 +153,22 @@ class SendEmailView(View):
 class ResetPasswordView(View):
     def post(self, request):
         try:
-            data         = json.loads(request.body)
-            email        = data["email"]
-            password     = data["password"]
-            re_password  = data["re_password"]
+            data               = json.loads(request.body)
+            email              = data["email"]
+            password           = data["password"]
+            re_password        = data["re_password"]
+            reset_token_number = data['reset_token_number']
             
             if password != re_password:
                 return JsonResponse({"message" : "PASSWORD_MISMATCH_ERROR"}, status = 400)
 
             if not re.match('^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~₩!@#$%^&*()\-_=+])[a-zA-Z0-9~!@#$%^&*()_\-+=]{8,17}$', password):
                 return JsonResponse({"message" : "PASSWORD_VALIDATION_ERROR"}, status=400)
-        
+
             user = User.objects.get(email=email)
+            if user.reset_token_number != reset_token_number:
+                return JsonResponse({"message" : "RESET_TOKEN_VALIDATION_ERROR"})
+
             user.password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
             user.save()
             
