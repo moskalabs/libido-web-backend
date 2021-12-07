@@ -10,8 +10,6 @@ from .models         import User
 import smtplib  
 from email.mime.text import MIMEText
 
-timestamp    = str(int(time.time() * 1000))
-
 service_id   = settings.SERVICE_ID
 access_key   = settings.ACCESS_KEY
 
@@ -19,26 +17,27 @@ uri          = f'/sms/v2/services/{service_id}/messages'
 api_url      = f'https://sens.apigw.ntruss.com{uri}'
 
 def make_signature(uri, access_key):
+    timestamp         = str(int(time.time() * 1000))
     access_secret_key = bytes(settings.ACCESS_SECRET_KEY, 'UTF-8')
     message           = "POST" + " " + uri + "\n" + timestamp + "\n" + access_key
     message           = bytes(message, 'UTF-8')
     signin_key        = base64.b64encode(hmac.new(
         access_secret_key, message, digestmod=hashlib.sha256).digest())
-    return signin_key 
+    return signin_key, timestamp 
 
 class SendSMSView(View):
     def post(self, request):
         try:
-            data        = json.loads(request.body)
-            auth_number = randint(1000,10000)
-            
-            messages    = { 'to' : data['phone_number']}
-            
-            headers     = {
+            data               = json.loads(request.body)
+            auth_number        = randint(1000,10000)
+            signkey, timestamp = make_signature(uri, access_key)
+           
+            messages           = { 'to' : data['phone_number']}
+            headers            = {
                 "Content-Type"             : "application/json; charset=utf-8",
                 "x-ncp-apigw-timestamp"    : timestamp,
                 "x-ncp-iam-access-key"     : access_key,
-                "x-ncp-apigw-signature-v2" : make_signature(uri, access_key)
+                "x-ncp-apigw-signature-v2" : signkey
             }
 
             body = {
@@ -48,9 +47,9 @@ class SendSMSView(View):
                 "content"     : "인증번호 [{}]를 입력해 주세요.".format(auth_number),
                 "messages"    : [messages]
             }
-
+            
             json_body = json.dumps(body)
-
+            
             requests.post(api_url, headers = headers, data=json_body)
 
             return JsonResponse({'auth_number' : auth_number}, status = 200)
