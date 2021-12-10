@@ -2,6 +2,8 @@ import os
 
 from pathlib import Path
 import pymysql
+#from django.contrib.sites.models import Site
+
 pymysql.install_as_MySQLdb()
 
 from my_settings import DATABASES, EMAIL_HOST, EMAIL_PORT, SECRET_KEY, ALGORITHM, YOUTUBE_DATA_API_KEY, \
