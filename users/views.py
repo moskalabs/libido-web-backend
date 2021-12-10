@@ -3,7 +3,7 @@ import hashlib, hmac, base64, time
 from random          import randint
 
 from django.views    import View
-from django.http     import JsonResponse
+from django.http     import JsonResponse, HttpResponse
 from django.conf     import settings
 
 from .models         import User
