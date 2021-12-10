@@ -4,12 +4,12 @@ from core.models    import TimeStampModel
 
 
 class User(TimeStampModel):
-    name               = models.CharField(max_length=30)
-    birth              = models.CharField(max_length=10)
+    name               = models.CharField(max_length=30, default='')
+    day_of_birth       = models.CharField(max_length=30, default='')
+    nation             = models.CharField(max_length=30, null=True)
     email              = models.EmailField(max_length=250, unique=True)
     password           = models.CharField(max_length=300, null=True)
     phone_number       = models.CharField(max_length=30)
-    nation             = models.CharField(max_length=30, null=True)
     nickname           = models.CharField(max_length=30, unique=True)
     profile_image_url  = models.URLField(max_length=2000, null=True)
     login_method       = models.CharField(max_length=30, null=True)
