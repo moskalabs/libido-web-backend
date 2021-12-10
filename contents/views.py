@@ -33,12 +33,12 @@ class SearchContentView(View):
 
         result = [
             {
-                'link_url'      : 'https://www.youtube.com/video/' + item['id']['videoId'],
+                'link_url'      : 'https://www.youtube.com/embed/'+item['id']['videoId'],
                 'title'         : item['snippet']['title'],
-                'description'   : item['snippet']['description'],
                 'image_url'     : item['snippet']['thumbnails']['medium']['url'],
                 'channel_id'    : item['snippet']['channelId'],
                 'channel_title' : item['snippet']['channelTitle'],
+                'published_at'  : item['snippet']['publishedAt'],
             } for item in items
         ]
 
