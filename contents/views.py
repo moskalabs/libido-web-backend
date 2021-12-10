@@ -33,7 +33,7 @@ class SearchContentView(View):
 
         result = [
             {
-                'link_url'      : 'https://www.youtube.com/embed/' + item['id']['videoId'],
+                'link_url'      : 'https://www.youtube.com/embed/'+item['id']['videoId'],
                 'title'         : item['snippet']['title'],
                 'image_url'     : item['snippet']['thumbnails']['medium']['url'],
                 'channel_id'    : item['snippet']['channelId'],
