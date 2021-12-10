@@ -2,7 +2,6 @@ from django.db import models
 
 from core.models    import TimeStampModel
 
-
 class User(TimeStampModel):
     name               = models.CharField(max_length=30, default='')
     day_of_birth       = models.CharField(max_length=30, default='')
