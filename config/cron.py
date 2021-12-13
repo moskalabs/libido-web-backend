@@ -37,7 +37,7 @@ def popular_videos_get_youtube_api():
             published_at          = item['snippet']['publishedAt'],
             content_categories_id = youtube_obj.id,
         )
-        if item['topicDetails'].get('topicCategories'):
+        if item.get('topicDetails'):
             tags = item['topicDetails']['topicCategories']
             for tag in tags:
                 tag_obj, created = Tag.objects.get_or_create(name = tag.split('/')[-1])
