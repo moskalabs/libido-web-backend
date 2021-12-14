@@ -5,7 +5,8 @@ from django.views    import View
 from django.http     import JsonResponse
 from django.conf     import settings
 
-from .models         import User
+from .models         import User, Follow
+from core.views      import login_required
 import smtplib  
 from email.mime.text import MIMEText
 
@@ -214,3 +215,38 @@ class ResetPasswordView(View):
 
         except JSONDecodeError:
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
+
+
+class UserFollowView(View):
+    @login_required
+    def get(self, request):
+        user   = request.user
+        OFFSET = int(request.GET.get('offset', 0))
+        LIMIT  = int(request.GET.get('display', 8))
+
+        follows = Follow.objects.filter(users_id=user.id)
+        friends = [follow.followed for follow in follows][OFFSET:OFFSET+LIMIT]
+        
+        result = [
+            {   
+                'id'            : friend.id,
+                'nickname'      : friend.nickname,
+                'image_url'     : friend.profile_image_url,
+            } for friend in friends
+        ]
+
+        return JsonResponse({'message': result}, status=200)
+
+    @login_required
+    def post(self, request):
+        friend_id = json.loads(request.body)['friend_id']
+
+        follow_obj, created = Follow.objects.get_or_create(users_id=request.user.id, followed_id=friend_id)
+
+        if not created:
+            follow_obj.delete()
+            return JsonResponse({"message": "FOLLOW_LIST_DELETE_SUCCESS"}, status=200)
+
+        return JsonResponse({"message": "FOLLOW_LIST_CREATE_SUCCESS"}, status=201)
+
+
