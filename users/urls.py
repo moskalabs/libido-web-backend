@@ -10,4 +10,5 @@ urlpatterns = [
     path("/signupemail", SignupSendEmailView.as_view()),
     path("/resetemail", ResetPasswordSendEmailView.as_view()),
     path("/resetpw", ResetPasswordView.as_view()),
+    path("/follows", UserFollowView.as_view()),
 ]
