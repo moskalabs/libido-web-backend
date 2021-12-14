@@ -6,7 +6,7 @@ from django.db.models  import Q
 from json.decoder      import JSONDecodeError
 
 from .models           import *
-from users.models   import *
+from users.models      import *
 from contents.models   import *
 from core.views        import login_required
 
@@ -54,6 +54,34 @@ class RoomListView(View):
                 'nickname'      : room[0].users.nickname,
                 'image_url'     : room[0].rooms_contents.first().thumbnails_url,
                 'published_at'  : room[0].created_at,
+            } for room in rooms
+        ]
+
+        return JsonResponse({'message': result}, status=200)
+
+
+class FriendRoomView(View):
+    @login_required
+    def get(self, request):
+        user     = request.user
+        OFFSET   = int(request.GET.get('offset', 0))
+        LIMIT    = int(request.GET.get('display', 8))
+
+        follows = Follow.objects.filter(users_id=user.id).select_related('followed').prefetch_related('followed__rooms', 'followed__rooms__rooms_contents')
+        rooms = [room for follow in follows for room in follow.followed.rooms.all()][OFFSET:OFFSET+LIMIT]
+
+        result = [
+            {   
+                'id'            : room.id,
+                'category'      : room.rooms_contents.first().content_categories.name,
+                'is_public'     : room.is_public,
+                'password'      : room.password,
+                'link_url'      : room.rooms_contents.first().content_link_url,
+                'title'         : room.title,
+                'title'         : room.description,
+                'nickname'      : room.users.nickname,
+                'image_url'     : room.rooms_contents.first().thumbnails_url,
+                'published_at'  : room.created_at,
             } for room in rooms
         ]
 
