@@ -1,4 +1,5 @@
 import json, re, bcrypt, jwt, uuid, requests
+import os, sys, urllib.request
 from json.decoder    import JSONDecodeError
 from urllib          import parse
 
@@ -257,6 +258,48 @@ class GoogleSignInView(View):
 
         except KeyError:
           return JsonResponse({"message" : "KEY_ERROR"}, status = 400)
+
+class NaverSignInView(View):
+    def get(self, request):
+        try:
+            access_token = "AAAAODlNmrPzoJOfoRt7sQyeLScLJKAx2I9YKTOy0u9vU-zKSPj3vYHMBKZMjAG1XX_gvq7tXHPqtGRCBWesA01v7S8"
+            #access_token   = request.headers["Authorization"]
+             
+            user_info_response = requests.get( "https://openapi.naver.com/v1/nid/me", \
+                headers={"Authorization": f"Bearer {access_token}"})
+
+            user_info    = user_info_response.json()
+            
+            id           = user_info['response']['id']
+            email        = user_info['response']['email']
+            name         = user_info['response']['name']
+            login_method = "naver"
+            
+            obj, created = User.objects.get_or_create(
+                email        = email,
+                nickname     = name,
+                platform_id  = id,
+                login_method = login_method
+            )
+    
+            status_code = 201 if created else 200
+    
+            results = {
+                "platform_id" : obj.platform_id,
+                "email"       : obj.email,
+                "nickname"    : obj.nickname
+            }
+    
+            jwt_payload  = {"id" : obj.platform_id}
+            access_token = jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
+    
+            return JsonResponse({
+                    "results"     : results, 
+                    "access_token": access_token
+                }, status=status_code)
+
+        except KeyError:
+          return JsonResponse({"message" : "KEY_ERROR"}, safe=False, status = 400)
 
 class UserFollowView(View):
     @login_required
