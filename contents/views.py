@@ -4,7 +4,6 @@ from django.http       import JsonResponse
 from django.conf       import settings
 from django.views      import View
 from django.db.models  import Q
-from json.decoder      import JSONDecodeError
 
 from .models           import *
 from users.models      import *
@@ -52,7 +51,6 @@ class ContentListView(View):
     @login_required
     def get(self, request):
         category = request.GET.get('category')
-        user     = request.user
         OFFSET   = int(request.GET.get('offset', 0))
         LIMIT    = int(request.GET.get('display', 8))
 
@@ -60,26 +58,22 @@ class ContentListView(View):
         ordering_priority = []
 
         if category == 'customize':
-            hitoryies = user.user_histories.all()
+            hitoryies = request.user.user_histories.all().prefetch_related('rooms_contents', 'rooms_contents__content_tags')
 
             if hitoryies:
-                contents  = [history.rooms_contents.all() for history in hitoryies]
-                tag_list  = [content[0].content_tags.all() for content in contents]
-                tags_ids  = list(set([tag[0].id for tag in tag_list]))
-                
                 sort = '-view_count'
                 ordering_priority.append(sort)
-                q.add(Q(content_tags__id__in = tags_ids), q.AND)
-            
+                
+                tag_list = set([tags.id for history in hitoryies for content in history.rooms_contents.all() for tags in content.content_tags.all()])
+                q.add(Q(content_tags__id__in = tag_list), q.AND)
+
             else:
                 sort = ['?', '-view_count']
                 ordering_priority.extend(sort)
-                q = Q()
         
         if category == 'popular':
             sort = '-created_at'
             ordering_priority.append(sort)
-            q = Q()
 
         contents = Content.objects.filter(q).select_related('content_categories').order_by(*ordering_priority).distinct()[OFFSET:OFFSET+LIMIT]
         
