@@ -1,5 +1,6 @@
-import json, re, bcrypt, jwt, uuid
-from json.decoder import JSONDecodeError
+import json, re, bcrypt, jwt, uuid, requests
+from json.decoder    import JSONDecodeError
+from urllib          import parse
 
 from django.views    import View
 from django.http     import JsonResponse
@@ -216,6 +217,46 @@ class ResetPasswordView(View):
         except JSONDecodeError:
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
 
+class GoogleSignInView(View):
+    def get(self, request):
+        try: 
+            access_token   = request.headers["Authorization"]
+             
+            user_info_response = requests.get( "https://www.googleapis.com/oauth2/v3/userinfo", \
+                headers={"Authorization": f"Bearer {access_token}"})
+
+            user_info = user_info_response.json()
+            
+            sub          = user_info.get('sub')
+            email        = user_info.get('email')
+            name         = user_info.get('name')
+            login_method = "google"
+            
+            obj, created = User.objects.get_or_create(
+                email        = email,
+                nickname     = name,
+                platform_id  = sub,
+                login_method = login_method
+            )
+    
+            status_code = 201 if created else 200
+    
+            results = {
+                "platform_id" : obj.platform_id,
+                "email"       : obj.email,
+                "nickname"    : obj.nickname
+            }
+    
+            jwt_payload  = {"id" : obj.platform_id}
+            access_token = jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
+    
+            return JsonResponse({
+                    "results"     : results, 
+                    "access_token": access_token
+                }, status=status_code)
+
+        except KeyError:
+          return JsonResponse({"message" : "KEY_ERROR"}, status = 400)
 
 class UserFollowView(View):
     @login_required
@@ -248,5 +289,3 @@ class UserFollowView(View):
             return JsonResponse({"message": "FOLLOW_LIST_DELETE_SUCCESS"}, status=200)
 
         return JsonResponse({"message": "FOLLOW_LIST_CREATE_SUCCESS"}, status=201)
-
-
