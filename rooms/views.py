@@ -3,7 +3,7 @@ import json
 from django.http       import JsonResponse
 from django.views      import View
 from django.db.models  import Q
-from json.decoder      import JSONDecodeError
+from django.contrib.admin.utils import flatten
 
 from .models           import *
 from users.models      import *
@@ -22,15 +22,15 @@ class RoomListView(View):
         ordering_priority = []
 
         if category == 'customize':
-            hitoryies = user.user_histories.all()
+            hitoryies = user.user_histories.all().prefetch_related('rooms_contents', 'rooms_contents__content_tags')
 
             if hitoryies:
-                contents  = [history.rooms_contents.all() for history in hitoryies]
-                tag_list  = set([tag.id for content in contents for tag in content[0].content_tags.all()])
-                
                 sort = '-view_count'
                 ordering_priority.append(sort)
+
+                tag_list  = set([tags.id for history in hitoryies for content in history.rooms_contents.all() for tags in content.content_tags.all()])
                 q.add(Q(content_tags__id__in = tag_list), q.AND)
+
             else:
                 sort = ['?', '-view_count']
                 ordering_priority.extend(sort)
@@ -38,23 +38,23 @@ class RoomListView(View):
         if category == 'popular':
             sort = '-created_at'
             ordering_priority.append(sort)
-
-        contents = Content.objects.filter(q).select_related('content_categories').order_by(*ordering_priority).distinct()
-        rooms    = [content.rooms.all() for content in contents if content.rooms.all().exists()][OFFSET:OFFSET+LIMIT]
-
+        
+        contents = Content.objects.filter(q).select_related('content_categories').prefetch_related('rooms', 'rooms__rooms_contents').order_by(*ordering_priority).distinct()
+        rooms    = [flatten(content.rooms.all()) for content in contents if content.rooms.all().exists()]
+        
         result = [
             {   
-                'id'            : room[0].id,
-                'category'      : room[0].rooms_contents.first().content_categories.name,
-                'is_public'     : room[0].is_public,
-                'password'      : room[0].password,
-                'link_url'      : room[0].rooms_contents.first().content_link_url,
-                'title'         : room[0].title,
-                'title'         : room[0].description,
-                'nickname'      : room[0].users.nickname,
-                'image_url'     : room[0].rooms_contents.first().thumbnails_url,
-                'published_at'  : room[0].created_at,
-            } for room in rooms
+                'id'            : room.id,
+                'category'      : room.rooms_contents.first().content_categories.name,
+                'is_public'     : room.is_public,
+                'password'      : room.password,
+                'link_url'      : room.rooms_contents.first().content_link_url,
+                'title'         : room.title,
+                'title'         : room.description,
+                'nickname'      : room.users.nickname,
+                'image_url'     : room.rooms_contents.first().thumbnails_url,
+                'published_at'  : room.created_at,
+            } for room in flatten(rooms)[OFFSET:OFFSET+LIMIT]
         ]
 
         return JsonResponse({'message': result}, status=200)
