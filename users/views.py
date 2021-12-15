@@ -1,7 +1,5 @@
 import json, re, bcrypt, jwt, uuid, requests
-import os, sys, urllib.request
 from json.decoder    import JSONDecodeError
-from urllib          import parse
 
 from django.views    import View
 from django.http     import JsonResponse
@@ -262,9 +260,8 @@ class GoogleSignInView(View):
 class NaverSignInView(View):
     def get(self, request):
         try:
-            access_token = "AAAAODlNmrPzoJOfoRt7sQyeLScLJKAx2I9YKTOy0u9vU-zKSPj3vYHMBKZMjAG1XX_gvq7tXHPqtGRCBWesA01v7S8"
-            #access_token   = request.headers["Authorization"]
-             
+            access_token   = request.headers["Authorization"]
+            
             user_info_response = requests.get( "https://openapi.naver.com/v1/nid/me", \
                 headers={"Authorization": f"Bearer {access_token}"})
 
