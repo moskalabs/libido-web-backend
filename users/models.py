@@ -13,7 +13,7 @@ class User(TimeStampModel):
     nickname           = models.CharField(max_length=30, unique=True)
     profile_image_url  = models.URLField(max_length=2000, null=True)
     login_method       = models.CharField(max_length=30, null=True)
-    platform_id        = models.CharField(max_length=30, null=True)
+    platform_id        = models.CharField(max_length=100, null=True)
     description        = models.TextField(null=True)
     reset_token_number = models.CharField(max_length=30, null=True)
     user_histories     = models.ManyToManyField('rooms.Room', through="rooms.UserRoomHistory", related_name="users_histories")
