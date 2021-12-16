@@ -11,5 +11,6 @@ urlpatterns = [
     path("/resetemail", ResetPasswordSendEmailView.as_view()),
     path("/resetpw", ResetPasswordView.as_view()),
     path("/google/login", GoogleSignInView.as_view()),
+    path("/naver/login", NaverSignInView.as_view()),
     path("/follows", UserFollowView.as_view()),
 ]
