@@ -167,11 +167,16 @@ class SigninView(View):
 
             user = User.objects.get(email=email)
             
+            result = {
+                "nickname"          : user.nickname,
+                "profile_image_url" : user.profile_image_url
+            }
+            
             if not bcrypt.checkpw(password.encode('utf-8'), user.password.encode('utf-8')):
                 return JsonResponse({"message" : "INVALID_USER_OR_INVALID_PASSWORD"}, status=401)
 
             access_token = jwt.encode({"id" : user.id}, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
-            return JsonResponse({"message" : "SUCCESS", "ACCESS_TOKEN" : access_token}, status=200)
+            return JsonResponse({"result" : result, "ACCESS_TOKEN" : access_token}, status=200)
                 
         except User.DoesNotExist:
             return JsonResponse({"message" : "USER_DOES_NOT_EXISTS"}, status=401) 
