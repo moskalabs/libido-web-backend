@@ -311,14 +311,15 @@ class UserFollowView(View):
         OFFSET = int(request.GET.get('offset', 0))
         LIMIT  = int(request.GET.get('display', 8))
 
-        follows = Follow.objects.filter(users_id=user.id)
+        follows = Follow.objects.filter(users_id=user.id).select_related('users', 'followed')
         friends = [follow.followed for follow in follows][OFFSET:OFFSET+LIMIT]
         
         result = [
             {   
-                'id'            : friend.id,
-                'nickname'      : friend.nickname,
-                'image_url'     : friend.profile_image_url,
+                'id'        : friend.id,
+                'nickname'  : friend.nickname,
+                'image_url' : friend.profile_image_url,
+                'follows'   : friend.follow_by_users.all().count(),
             } for friend in friends
         ]
 
