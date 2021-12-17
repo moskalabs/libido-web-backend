@@ -6,6 +6,7 @@ from django.http     import JsonResponse
 from django.conf     import settings
 
 from .models         import User, Follow
+from rooms.models    import UserRoomHistory
 from core.views      import login_required
 import smtplib  
 from email.mime.text import MIMEText
@@ -334,3 +335,38 @@ class UserFollowView(View):
             return JsonResponse({"message": "FOLLOW_LIST_DELETE_SUCCESS"}, status=200)
 
         return JsonResponse({"message": "FOLLOW_LIST_CREATE_SUCCESS"}, status=201)
+
+
+
+class UserHistoryView(View):
+    @login_required
+    def get(self, request):
+        histories = UserRoomHistory.objects.filter(users=request.user).select_related('rooms', 'rooms__room_categories').prefetch_related('rooms__rooms_contents')
+
+        if not histories:
+            return JsonResponse({"message": "USER_HISTORY_DOES_NOT_EXISTS"}, status=404)
+
+        result = [
+            {   
+                'id'              : history.rooms.id,
+                'title'           : history.rooms.title,
+                'thumbnails_url'  : history.rooms.rooms_contents.all()[0].thumbnails_url,
+                'description'     : history.rooms.description,
+                'is_public'       : history.rooms.is_public,
+                'room_categories' : history.rooms.room_categories.name,
+            } for history in histories
+        ]
+
+        return JsonResponse({"message": result}, status=200)
+        
+
+    @login_required
+    def post(self, request):
+        room_id = json.loads(request.body)['room_id']
+        obj, created = UserRoomHistory.objects.update_or_create(rooms_id=room_id, users_id=request.user.id)
+
+        if created:
+            return JsonResponse({"message": "HISTORY_CREATE_SUCCESS"}, status=200)
+        
+        return JsonResponse({"message": "HISTORY_UPDATE_SUCCESS"}, status=200)
+
