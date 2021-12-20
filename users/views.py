@@ -1,20 +1,23 @@
-import json, re, bcrypt, jwt, uuid, requests
+import json, re, bcrypt, jwt, uuid, requests, unicodedata
 from json.decoder    import JSONDecodeError
 
-from django.views    import View
-from django.http     import JsonResponse
-from django.conf     import settings
-
-from .models         import User, Follow
-from core.views      import login_required
-import smtplib  
-from email.mime.text import MIMEText
+from django.views        import View
+from django.http         import JsonResponse, HttpResponse
+from django.conf         import settings
+from django.utils.http   import urlencode
+     
+from .models             import User, Follow
+from core.views          import login_required
+from email.mime.text     import MIMEText
+from botocore.exceptions import NoCredentialsError
+import smtplib
+import boto3
 
 class EmailDuplicateCheckView(View):
     def post(self, request):
         try:
             email = json.loads(request.body)["email"]
-            
+           
             if not email:
                 return JsonResponse({"message" : "VALUE_ERROR"}, status=401)
 
@@ -334,3 +337,54 @@ class UserFollowView(View):
             return JsonResponse({"message": "FOLLOW_LIST_DELETE_SUCCESS"}, status=200)
 
         return JsonResponse({"message": "FOLLOW_LIST_CREATE_SUCCESS"}, status=201)
+
+class ProfileModifyView(View):
+    @login_required
+    def patch(self, request):
+        try:
+            data = json.loads(request.body)
+
+            user = User.objects.get(id=request.user.id)
+
+            user.nickname = data["nickname"]
+            user.nation   = data["nation"]
+            user.save()
+
+            return JsonResponse({"message" : "SUCCESS"}, status=201)
+        
+        except KeyError:
+            return JsonResponse({"message" : "KEY_ERROR"}, status=401)
+
+    #@login_required
+    def post(self, request):
+        try:
+            image      = request.FILES['filename']
+            
+            upload_key = str(uuid.uuid4().hex[:10]) + image.name
+
+            s3_client = boto3.client(
+               "s3",
+                aws_access_key_id     = settings.AWS_IAM_ACCESS_KEY,
+                aws_secret_access_key = settings.AWS_IAM_SECRET_KEY
+            )
+            s3_client.upload_fileobj(
+                image,
+                settings.AWS_STORAGE_BUCKET_NAME,
+                upload_key,
+                ExtraArgs={
+                    "ContentType": image.content_type
+                }
+            )
+
+            user = User.objects.get(id=request.user.id)
+           
+            upload_key = unicodedata.normalize('NFC', upload_key)
+
+            profile_image_url = "https://libido-test-dev.s3.ap-northeast-2.amazonaws.com/"+upload_key
+            
+            user.profile_image_url = profile_image_url
+            user.save()
+
+            return JsonResponse({"message" : "SUCCESS"}, status = 201)
+        except KeyError:
+            return JsonResponse({"message" : "KEY_ERROR"}, status = 401)
