@@ -14,7 +14,7 @@ class RoomListView(View):
     @login_required
     def get(self, request):
         category = request.GET.get('category')
-        user     = request.user
+        user     = request.user if request.user != None else None
         OFFSET   = int(request.GET.get('offset', 0))
         LIMIT    = int(request.GET.get('display', 8))
 

@@ -8,4 +8,4 @@ bcrypt==3.2.0
 pyjwt==2.3.0
 django-crontab==0.7.1
 urllib3==1.26.7
-boto==1.20.24
+boto3==1.20.24

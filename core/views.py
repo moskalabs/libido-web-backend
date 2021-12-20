@@ -7,6 +7,10 @@ from users.models   import User
 
 def login_required(func):
     def wrapper(self, request, *args, **kwargs):
+        if request.GET.get('category') == 'popular':
+            request.user = None
+            return func(self, request, *args, **kwargs)
+
         try:
             access_token = request.headers.get('Authorization', None)
             data = jwt.decode(access_token, settings.SECRET_KEY, algorithms=settings.ALGORITHM)
