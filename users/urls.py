@@ -14,4 +14,5 @@ urlpatterns = [
     path("/naver/login", NaverSignInView.as_view()),
     path("/follows", UserFollowView.as_view()),
     path("/profile", ProfileModifyView.as_view()),
+    path("/history", UserHistoryView.as_view()),
 ]

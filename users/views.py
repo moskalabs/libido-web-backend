@@ -4,14 +4,13 @@ from json.decoder    import JSONDecodeError
 from django.views        import View
 from django.http         import JsonResponse, HttpResponse
 from django.conf         import settings
-from django.utils.http   import urlencode
      
 from .models             import User, Follow
+from rooms.models        import UserRoomHistory
 from core.views          import login_required
 from email.mime.text     import MIMEText
 from botocore.exceptions import NoCredentialsError
-import smtplib
-import boto3
+import smtplib, boto3
 
 class EmailDuplicateCheckView(View):
     def post(self, request):
@@ -313,14 +312,15 @@ class UserFollowView(View):
         OFFSET = int(request.GET.get('offset', 0))
         LIMIT  = int(request.GET.get('display', 8))
 
-        follows = Follow.objects.filter(users_id=user.id)
+        follows = Follow.objects.filter(users_id=user.id).select_related('users', 'followed')
         friends = [follow.followed for follow in follows][OFFSET:OFFSET+LIMIT]
         
         result = [
             {   
-                'id'            : friend.id,
-                'nickname'      : friend.nickname,
-                'image_url'     : friend.profile_image_url,
+                'id'        : friend.id,
+                'nickname'  : friend.nickname,
+                'image_url' : friend.profile_image_url,
+                'follows'   : friend.follow_by_users.all().count(),
             } for friend in friends
         ]
 
@@ -350,12 +350,17 @@ class ProfileModifyView(View):
             user.nation   = data["nation"]
             user.save()
 
-            return JsonResponse({"message" : "SUCCESS"}, status=201)
+            result = {
+                "nickname" : user.nickname,
+                "nation"   : user.nation
+            }
+
+            return JsonResponse({"message" : "SUCCESS", "result" : result}, status=201)
         
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)
 
-    #@login_required
+    @login_required
     def post(self, request):
         try:
             image      = request.FILES['filename']
@@ -384,7 +389,44 @@ class ProfileModifyView(View):
             
             user.profile_image_url = profile_image_url
             user.save()
+            
+            result = {
+                "profile_image_url" : user.profile_image_url
+            }
 
-            return JsonResponse({"message" : "SUCCESS"}, status = 201)
+            return JsonResponse({"message" : "SUCCESS", "result" : result}, status = 201)
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status = 401)
+
+
+class UserHistoryView(View):
+    @login_required
+    def get(self, request):
+        histories = UserRoomHistory.objects.filter(users=request.user).select_related('rooms', 'rooms__room_categories').prefetch_related('rooms__rooms_contents')
+
+        if not histories:
+            return JsonResponse({"message": "USER_HISTORY_DOES_NOT_EXISTS"}, status=404)
+
+        result = [
+            {   
+                'id'              : history.rooms.id,
+                'title'           : history.rooms.title,
+                'thumbnails_url'  : history.rooms.rooms_contents.all()[0].thumbnails_url,
+                'description'     : history.rooms.description,
+                'is_public'       : history.rooms.is_public,
+                'room_categories' : history.rooms.room_categories.name,
+            } for history in histories
+        ]
+
+        return JsonResponse({"message": result}, status=200)
+        
+
+    @login_required
+    def post(self, request):
+        room_id = json.loads(request.body)['room_id']
+        obj, created = UserRoomHistory.objects.update_or_create(rooms_id=room_id, users_id=request.user.id)
+
+        if created:
+            return JsonResponse({"message": "HISTORY_CREATE_SUCCESS"}, status=200)
+        
+        return JsonResponse({"message": "HISTORY_UPDATE_SUCCESS"}, status=200)
