@@ -68,21 +68,21 @@ class FriendRoomView(View):
         LIMIT    = int(request.GET.get('display', 8))
 
         follows = Follow.objects.filter(users_id=user.id).select_related('followed').prefetch_related('followed__rooms', 'followed__rooms__rooms_contents')
-        rooms = [room for follow in follows for room in follow.followed.rooms.all()][OFFSET:OFFSET+LIMIT]
-
+        rooms = [room for follow in follows for room in follow.followed.rooms.all()]
+            
         result = [
-            {   
-                'id'            : room.id,
-                'category'      : room.rooms_contents.first().content_categories.name,
-                'is_public'     : room.is_public,
-                'password'      : room.password,
-                'link_url'      : room.rooms_contents.first().content_link_url,
-                'title'         : room.title,
-                'title'         : room.description,
-                'nickname'      : room.users.nickname,
-                'image_url'     : room.rooms_contents.first().thumbnails_url,
-                'published_at'  : room.created_at,
-            } for room in rooms
-        ]
+                {   
+                    'id'            : room.id,
+                    'category'      : room.room_categories.name,
+                    'is_public'     : room.is_public,
+                    'password'      : room.password,
+                    'link_url'      : room.rooms_contents.first().content_link_url,
+                    'title'         : room.title,
+                    'title'         : room.description,
+                    'nickname'      : room.users.nickname,
+                    'image_url'     : room.rooms_contents.first().thumbnails_url,
+                    'published_at'  : room.created_at,
+                } for room in rooms[OFFSET:OFFSET+LIMIT]
+            ]    
 
         return JsonResponse({'message': result}, status=200)
