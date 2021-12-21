@@ -226,18 +226,24 @@ class ResetPasswordView(View):
 class GoogleSignInView(View):
     def get(self, request):
         try: 
-            access_token   = request.headers["Authorization"]
-             
+            access_token = request.headers["Authorization"]
+            
+            if access_token == '':
+                return JsonResponse({"message" : "VALUES_ERROR"}, status = 401)
+
             user_info_response = requests.get( "https://www.googleapis.com/oauth2/v3/userinfo", \
                 headers={"Authorization": f"Bearer {access_token}"})
 
             user_info = user_info_response.json()
-            
+
             sub          = user_info.get('sub')
             email        = user_info.get('email')
             name         = user_info.get('name')
             login_method = "google"
             
+            if sub == None or email == None or name == None:
+                return JsonResponse({"message" : "VALUES_ERROR"}, status = 401)
+
             obj, created = User.objects.get_or_create(
                 email        = email,
                 nickname     = name,
@@ -261,18 +267,28 @@ class GoogleSignInView(View):
                     "access_token": access_token
                 }, status=status_code)
 
+        except JSONDecodeError:
+            return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
+
         except KeyError:
           return JsonResponse({"message" : "KEY_ERROR"}, status = 400)
 
 class NaverSignInView(View):
     def get(self, request):
         try:
-            access_token   = request.headers["Authorization"]
+            access_token = request.headers["Authorization"]
+            
+            if access_token == '':
+                return JsonResponse({"message" : "VALUES_ERROR"}, status = 401)
             
             user_info_response = requests.get( "https://openapi.naver.com/v1/nid/me", \
                 headers={"Authorization": f"Bearer {access_token}"})
+            
+            user_info = user_info_response.json()
 
-            user_info    = user_info_response.json()
+            if user_info['response']['id'] == '' or user_info['response']['email'] == '' \
+                or user_info['response']['name'] == '':
+                return JsonResponse({"message" : "VALUES_ERROR"}, status = 401)
             
             id           = user_info['response']['id']
             email        = user_info['response']['email']
@@ -297,10 +313,14 @@ class NaverSignInView(View):
             jwt_payload  = {"id" : obj.platform_id}
             access_token = jwt.encode(jwt_payload, settings.SECRET_KEY, algorithm = settings.ALGORITHM)
     
+            
             return JsonResponse({
                     "results"     : results, 
                     "access_token": access_token
                 }, status=status_code)
+
+        except JSONDecodeError:
+            return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
 
         except KeyError:
           return JsonResponse({"message" : "KEY_ERROR"}, safe=False, status = 400)
