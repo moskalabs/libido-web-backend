@@ -172,5 +172,5 @@ CORS_ALLOW_HEADERS = (
 
 # CRONTAB
 CRONJOBS = [
-    ('0 0,6,12,18 * * *', 'config.cron.popular_videos_get_youtube_api', '>> '+os.path.join(BASE_DIR, 'config/log/cron.log'))
+    ('0 10,22 * * *', 'config.cron.popular_videos_get_youtube_api', '>> '+os.path.join(BASE_DIR, 'config/log/cron.log'))
 ]
