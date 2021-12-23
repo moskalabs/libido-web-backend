@@ -2,16 +2,14 @@ import json, re, bcrypt, jwt, uuid, requests, unicodedata
 from json.decoder        import JSONDecodeError
 
 from django.views        import View
-from django.http         import JsonResponse, HttpResponse
+from django.http         import JsonResponse
 from django.conf         import settings
      
 from .models             import User, Follow
 from rooms.models        import UserRoomHistory
 from core.views          import login_required
 from email.mime.text     import MIMEText
-from botocore.exceptions import NoCredentialsError
 import smtplib, boto3
-from boto3.session       import Session
 
 class EmailDuplicateCheckView(View):
     def post(self, request):
