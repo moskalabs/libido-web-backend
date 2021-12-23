@@ -1,15 +1,14 @@
 import json, re, bcrypt, jwt, uuid, requests, unicodedata
-from json.decoder    import JSONDecodeError
+from json.decoder        import JSONDecodeError
 
 from django.views        import View
-from django.http         import JsonResponse, HttpResponse
+from django.http         import JsonResponse
 from django.conf         import settings
      
 from .models             import User, Follow
 from rooms.models        import UserRoomHistory
 from core.views          import login_required
 from email.mime.text     import MIMEText
-from botocore.exceptions import NoCredentialsError
 import smtplib, boto3
 
 class EmailDuplicateCheckView(View):
@@ -358,67 +357,6 @@ class UserFollowView(View):
 
         return JsonResponse({"message": "FOLLOW_LIST_CREATE_SUCCESS"}, status=201)
 
-class ProfileModifyView(View):
-    @login_required
-    def patch(self, request):
-        try:
-            data = json.loads(request.body)
-
-            user = User.objects.get(id=request.user.id)
-
-            user.nickname = data["nickname"]
-            user.nation   = data["nation"]
-            user.save()
-
-            result = {
-                "nickname" : user.nickname,
-                "nation"   : user.nation
-            }
-
-            return JsonResponse({"message" : "SUCCESS", "result" : result}, status=201)
-        
-        except KeyError:
-            return JsonResponse({"message" : "KEY_ERROR"}, status=401)
-
-    @login_required
-    def post(self, request):
-        try:
-            image      = request.FILES['filename']
-            
-            upload_key = str(uuid.uuid4().hex[:10]) + image.name
-
-            s3_client = boto3.client(
-               "s3",
-                aws_access_key_id     = settings.AWS_IAM_ACCESS_KEY,
-                aws_secret_access_key = settings.AWS_IAM_SECRET_KEY
-            )
-            s3_client.upload_fileobj(
-                image,
-                settings.AWS_STORAGE_BUCKET_NAME,
-                upload_key,
-                ExtraArgs={
-                    "ContentType": image.content_type
-                }
-            )
-
-            user = User.objects.get(id=request.user.id)
-           
-            upload_key = unicodedata.normalize('NFC', upload_key)
-
-            profile_image_url = "https://libido-test-dev.s3.ap-northeast-2.amazonaws.com/"+upload_key
-            
-            user.profile_image_url = profile_image_url
-            user.save()
-            
-            result = {
-                "profile_image_url" : user.profile_image_url
-            }
-
-            return JsonResponse({"message" : "SUCCESS", "result" : result}, status = 201)
-        except KeyError:
-            return JsonResponse({"message" : "KEY_ERROR"}, status = 401)
-
-
 class UserHistoryView(View):
     @login_required
     def get(self, request):
@@ -450,3 +388,92 @@ class UserHistoryView(View):
             return JsonResponse({"message": "HISTORY_CREATE_SUCCESS"}, status=200)
         
         return JsonResponse({"message": "HISTORY_UPDATE_SUCCESS"}, status=200)
+
+class UserProfileView(View):
+    @login_required
+    def get(self, request):
+        user = User.objects.get(id=request.user.id)
+        
+        result = {
+            "profile_image_url" : user.profile_image_url,
+            "nickname"          : user.nickname,
+            "email"             : user.email,
+            "description"       : user.description,
+            "nation"            : user.nation
+        }
+
+        return JsonResponse({"result" : result}, status = 201)
+
+    @login_required
+    def post(self, request):
+        try:
+            user = User.objects.get(id=request.user.id)
+            
+            image       = request.FILES.get("filename")
+            nickname    = request.POST.get("nickname")
+            nation      = request.POST.get("nation")
+            description = request.POST.get("description")
+
+            if nickname != None:
+                if User.objects.filter(nickname=nickname).exists():
+                    return JsonResponse({"message" : "DUPLICATION_NICKNAME"}, status = 400)
+                
+                user.nickname = nickname
+                user.save()
+
+            if nickname == "":
+                return JsonResponse({"message" : "VALUES_ERROR"}, status = 400)   
+ 
+            if nation != None:
+                user.nation = nation
+                user.save()
+
+            if description != None:
+                user.description = description
+                user.save()
+                
+            if image != None:
+                upload_key = str(uuid.uuid4().hex[:10]) + image.name
+
+                s3_client = boto3.client(
+                   "s3",
+                    aws_access_key_id     = settings.AWS_IAM_ACCESS_KEY,
+                    aws_secret_access_key = settings.AWS_IAM_SECRET_KEY
+                )
+
+                file = user.profile_image_url[56:]
+                s3_client.delete_object(
+                    Bucket=settings.AWS_STORAGE_BUCKET_NAME, 
+                    Key=file
+                )
+
+                upload_key = unicodedata.normalize('NFC', upload_key)
+
+                s3_client.upload_fileobj(
+                    image,
+                    settings.AWS_STORAGE_BUCKET_NAME,
+                    upload_key,
+                    ExtraArgs={
+                        "ContentType": image.content_type
+                    }
+                )
+
+                profile_image_url = "https://libido-test-dev.s3.ap-northeast-2.amazonaws.com/"+upload_key
+    
+                user.profile_image_url = profile_image_url
+                user.save()
+                
+            result = {
+                "profile_image_url" : user.profile_image_url,
+                "nickname" : user.nickname,
+                "nation" : user.nation,
+                "description" : user.description
+            }
+
+            return JsonResponse({"message" : "SUCCESS", "result" : result}, status=201)
+        
+        except JSONDecodeError:
+            return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
+
+        except KeyError:
+            return JsonResponse({"message" : "KEY_ERROR"}, status=401)
