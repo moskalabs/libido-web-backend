@@ -1,5 +1,6 @@
-import json, re, bcrypt, jwt, uuid, requests, unicodedata
+import json, re, bcrypt, jwt, uuid, requests, unicodedata, smtplib, boto3
 from json.decoder        import JSONDecodeError
+from email.mime.text     import MIMEText
 
 from django.views        import View
 from django.http         import JsonResponse
@@ -8,8 +9,7 @@ from django.conf         import settings
 from .models             import User, Follow
 from rooms.models        import UserRoomHistory
 from core.views          import login_required
-from email.mime.text     import MIMEText
-import smtplib, boto3
+
 
 class EmailDuplicateCheckView(View):
     def post(self, request):
@@ -116,12 +116,12 @@ class SignupView(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
-            
-            email       = data["email"]
-            password    = data["password"]
-            re_password = data["re_password"]
-            nickname    = data["nickname"]           
-            nation      = data["nation"]
+            email         = data["email"]
+            password      = data["password"]
+            re_password   = data["re_password"]
+            nickname      = data["nickname"]
+            receive_email = data["is_receive_email"]          
+            nation        = data["nation"]
 
             if not email or not password or not re_password or not nickname or not nation:
                 return JsonResponse({"message" : "VALUE_ERROR"}, status=401)
@@ -144,11 +144,12 @@ class SignupView(View):
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
             User.objects.create(
-                email        = email, 
-                password     = hashed_password,
-                nickname     = nickname,
-                nation       = nation,
-                login_method = 'libido'
+                email            = email, 
+                password         = hashed_password,
+                nickname         = nickname,
+                nation           = nation,
+                is_receive_email = receive_email,
+                login_method     = 'libido'
             )
             
             return JsonResponse({"message" : "SUCCESS"}, status=201)
@@ -399,6 +400,7 @@ class UserProfileView(View):
             "nickname"          : user.nickname,
             "email"             : user.email,
             "description"       : user.description,
+            "is_receive_email"  : user.is_receive_email,
             "nation"            : user.nation
         }
 
@@ -409,15 +411,15 @@ class UserProfileView(View):
         try:
             user = User.objects.get(id=request.user.id)
             
-            image       = request.FILES.get("filename")
-            nickname    = request.POST.get("nickname")
-            nation      = request.POST.get("nation")
-            description = request.POST.get("description")
+            image         = request.FILES.get("filename")
+            nickname      = request.POST.get("nickname")
+            nation        = request.POST.get("nation")
+            receive_email = request.POST.get("is_receive_email")
+            description   = request.POST.get("description")
 
             if nickname != None:
                 if User.objects.filter(nickname=nickname).exists():
                     return JsonResponse({"message" : "DUPLICATION_NICKNAME"}, status = 400)
-                
                 user.nickname = nickname
                 user.save()
 
@@ -426,6 +428,10 @@ class UserProfileView(View):
  
             if nation != None:
                 user.nation = nation
+                user.save()
+
+            if receive_email != None:
+                user.nation = receive_email
                 user.save()
 
             if description != None:
@@ -464,10 +470,12 @@ class UserProfileView(View):
                 user.save()
                 
             result = {
+                "nickname"          : user.nickname,
+                "email"             : user.email,
+                "nation"            : user.nation,
+                "description"       : user.description,
                 "profile_image_url" : user.profile_image_url,
-                "nickname" : user.nickname,
-                "nation" : user.nation,
-                "description" : user.description
+                "is_receive_email"  : user.is_receive_email,
             }
 
             return JsonResponse({"message" : "SUCCESS", "result" : result}, status=201)
