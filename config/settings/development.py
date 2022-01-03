@@ -1,4 +1,4 @@
-from base import *
+from .base import *
 
 if "DATABASE_HOST" in os.environ:
     # Running the Docker image with configs
@@ -16,9 +16,6 @@ AWS_IAM_ACCESS_KEY = os.environ["AWS_IAM_ACCESS_KEY"]
 AWS_IAM_SECRET_KEY = os.environ["AWS_IAM_SECRET_KEY"]
 AWS_S3_REGION_NAME = os.environ["AWS_S3_REGION_NAME"]
 AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
-AWS_S3_CUSTOM_DOMAIN = os.environ["AWS_S3_CUSTOM_DOMAIN"]
-AWS_S3_OBJECT_PARAMETERS = os.environ["AWS_S3_OBJECT_PARAMETERS"]
-DEFAULT_FILE_STORAGE = os.environ["DEFAULT_FILE_STORAGE"]
 
 # EMAIL
 EMAIL_HOST = os.environ["EMAIL_HOST"]
