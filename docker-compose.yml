@@ -1,0 +1,45 @@
+version: "3.3"
+services:
+  api:
+    image: xxxxxxx.dkr.ecr.ap-northeast-2.amazonaws.com/xxxxxx-dev:0.0.1
+    container_name: libido-api
+    build: .
+    restart: always
+    environment:
+      CACHES_BACKEND: "django_redis.cache.RedisCache"
+      CACHES_KEY_PREFIX: "LIBIDO:API"
+      CACHES_LOCATION: "redis://redis:6379/1"
+      DATABASE_ENGINE: "${DATABASE_ENGINE}"
+      DATABASE_HOST: "${DATABASE_HOST}"
+      DATABASE_NAME: "${DATABASE_NAME}"
+      DATABASE_PASSWORD: "${DATABASE_PASSWORD}"
+      DATABASE_PORT: "${DATABASE_PORT}"
+      DATABASE_USER: "${DATABASE_USER}"
+      DJANGO_SECRET_KEY: "${DJANGO_SECRET_KEY}"
+      DJANGO_SETTINGS_MODULE: "${DJANGO_SETTINGS_MODULE}"
+      SERVICE_ENV: "${SERVICE_ENV}"
+
+    links:
+      - redis:redis
+
+    ports:
+     - 80:80
+     - 443:443
+
+    restart: always
+
+  redis:
+    image: redis:6.2.1
+    container_name: libido_redis
+    command: redis-server --port 6379
+    restart: always
+    labels:
+      - "name=redis"
+      - "mode=standalone"
+
+    ports:
+      - 6379:6379
+    expose:
+      - "6379"
+
+    restart: always

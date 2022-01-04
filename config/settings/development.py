@@ -39,3 +39,20 @@ AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=86400",
 }
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+AWS_LOCATION = "static"
+
+STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
+STATIC_ROOT = os.path.join(BASE_DIR, "static/")
+
+MEDIA_URL = "http://%s/static/" % AWS_S3_CUSTOM_DOMAIN
+MEDIA_ROOT = os.path.join(AWS_S3_CUSTOM_DOMAIN, "libido")
+
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": [("redis", 6379)],
+        },
+    },
+}

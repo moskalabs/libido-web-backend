@@ -4,6 +4,8 @@
 
 # .env 
 .env
+.env.dev
+.env.prd
 
 # runserver sh
 runserver.sh

@@ -23,7 +23,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 DJANGO_APPS = [
     # 'django.contrib.admin',
-    # 'django.contrib.auth',
+    'django.contrib.auth', # channels  사용시 꼭 auth 필요
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -40,6 +40,7 @@ PROJECT_APPS = [
 THIRD_PARTY_APPS = [
     "corsheaders",
     "django_crontab",
+    "channels",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + PROJECT_APPS + THIRD_PARTY_APPS
