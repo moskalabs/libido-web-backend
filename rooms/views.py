@@ -8,7 +8,7 @@ from django.contrib.admin.utils import flatten
 from .models           import *
 from users.models      import *
 from contents.models   import *
-from core.views        import login_required
+from core.utils        import login_required
 
 class RoomListView(View):
     @login_required
