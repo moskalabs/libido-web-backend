@@ -7,7 +7,7 @@ from django.db.models  import Q
 
 from .models           import *
 from users.models      import *
-from core.views        import login_required
+from core.utils        import login_required
 
 
 class SearchContentView(View):
