@@ -19,7 +19,6 @@ DEBUG = True
 
 ALLOWED_HOSTS = ["*"]
 
-
 # Application definition
 DJANGO_APPS = [
     # 'django.contrib.admin',
@@ -160,3 +159,5 @@ CRONJOBS = [
         ">> " + os.path.join(BASE_DIR, "config/log/cron.log"),
     )
 ]
+
+APPEND_SLASH = False
