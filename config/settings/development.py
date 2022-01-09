@@ -1,4 +1,8 @@
 from .base import *
+from boto3.session import Session
+
+
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 if "DATABASE_HOST" in os.environ:
@@ -15,6 +19,10 @@ if "DATABASE_HOST" in os.environ:
 
 AWS_IAM_ACCESS_KEY = os.environ["AWS_IAM_ACCESS_KEY"]
 AWS_IAM_SECRET_KEY = os.environ["AWS_IAM_SECRET_KEY"]
+
+AWS_ACCESS_KEY = AWS_IAM_ACCESS_KEY
+AWS_SECRET_KEY = AWS_IAM_SECRET_KEY
+
 AWS_S3_REGION_NAME = os.environ["AWS_S3_REGION_NAME"]
 AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
 
@@ -41,9 +49,9 @@ AWS_S3_OBJECT_PARAMETERS = {
 }
 
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AWS_LOCATION = "static"
-
 AWS_DEFAULT_ACL = "public-read"
 
 AWS_S3_OBJECT_PARAMETERS = {
@@ -64,3 +72,9 @@ CHANNEL_LAYERS = {
         },
     },
 }
+
+boto3_session = Session(
+    aws_access_key_id=AWS_ACCESS_KEY,
+    aws_secret_access_key=AWS_SECRET_KEY,
+    region_name=AWS_S3_REGION_NAME,
+)
