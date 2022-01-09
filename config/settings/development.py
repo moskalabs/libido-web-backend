@@ -1,5 +1,6 @@
 from .base import *
 
+
 if "DATABASE_HOST" in os.environ:
     # Running the Docker image with configs
     DATABASES["default"]["ENGINE"] = os.getenv("DATABASE_ENGINE")
@@ -38,9 +39,16 @@ AWS_S3_CUSTOM_DOMAIN = (
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=86400",
 }
+
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AWS_LOCATION = "static"
+
+AWS_DEFAULT_ACL = "public-read"
+
+AWS_S3_OBJECT_PARAMETERS = {
+    "CacheControl": "max-age=86400",
+}
 
 STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")

@@ -22,8 +22,8 @@ ALLOWED_HOSTS = ["*"]
 
 # Application definition
 DJANGO_APPS = [
-    # 'django.contrib.admin',
-    'django.contrib.auth', # channels  사용시 꼭 auth 필요
+    "django.contrib.admin",
+    "django.contrib.auth",  # channels  사용시 꼭 auth 필요
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -32,12 +32,16 @@ DJANGO_APPS = [
 
 PROJECT_APPS = [
     "core",
+    "chats",
     "users",
     "rooms",
     "contents",
 ]
 
 THIRD_PARTY_APPS = [
+    "django_filters",
+    "rest_framework",
+    "django_extensions",
     "corsheaders",
     "django_crontab",
     "channels",
@@ -50,7 +54,7 @@ MIDDLEWARE = [
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
     # 'django.middleware.csrf.CsrfViewMiddleware',
-    # 'django.contrib.auth.middleware.AuthenticationMiddleware',
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
     "corsheaders.middleware.CorsMiddleware",
@@ -75,6 +79,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "config.wsgi.application"
+ASGI_APPLICATION = "config.asgi.application"
 
 
 # Database

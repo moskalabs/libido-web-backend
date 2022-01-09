@@ -9,6 +9,8 @@
 
 # runserver sh
 runserver.sh
+migrations.sh
+url_mappings.sh
 
 # pyenv 
 .python-version
