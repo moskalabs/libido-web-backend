@@ -25,7 +25,6 @@ AWS_SECRET_KEY = AWS_IAM_SECRET_KEY
 
 AWS_S3_REGION_NAME = os.environ["AWS_S3_REGION_NAME"]
 AWS_STORAGE_BUCKET_NAME = os.environ["AWS_STORAGE_BUCKET_NAME"]
-
 # EMAIL
 EMAIL_HOST = os.environ["EMAIL_HOST"]
 EMAIL_PORT = os.environ["EMAIL_PORT"]
@@ -52,11 +51,14 @@ DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 STATICFILES_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 AWS_LOCATION = "static"
-AWS_DEFAULT_ACL = "public-read"
+AWS_DEFAULT_ACL = None
 
 AWS_S3_OBJECT_PARAMETERS = {
     "CacheControl": "max-age=86400",
 }
+
+AWS_S3_ENCRYPTION = True
+AWS_REGION_NAME = "ap-northeast-2"
 
 STATIC_URL = "https://%s/%s/" % (AWS_S3_CUSTOM_DOMAIN, AWS_LOCATION)
 STATIC_ROOT = os.path.join(BASE_DIR, "static/")

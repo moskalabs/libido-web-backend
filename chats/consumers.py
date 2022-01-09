@@ -1,5 +1,6 @@
 import json
 
+from django.contrib.auth import get_user_model
 from asgiref.sync import sync_to_async
 from channels.generic.websocket import AsyncWebsocketConsumer, JsonWebsocketConsumer
 
