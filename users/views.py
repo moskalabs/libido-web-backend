@@ -222,6 +222,9 @@ class ResetPasswordView(View):
 
         except JSONDecodeError:
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
+        
+        except ValidationError as e:
+            return JsonResponse({"message" : e.message}, status=400)
 
 class GoogleSignInView(View):
     def get(self, request):
