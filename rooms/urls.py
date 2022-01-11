@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import RoomListView, FriendRoomView, SearchRoomView
+from .views import RoomListView, FriendRoomView
 
 urlpatterns = [
     path('', RoomListView.as_view()),

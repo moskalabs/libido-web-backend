@@ -1,37 +1,52 @@
 import json, re, bcrypt, jwt, uuid, requests, unicodedata, smtplib, boto3
 
-from json.decoder        import JSONDecodeError
-from email.mime.text     import MIMEText
+from json.decoder           import JSONDecodeError
+from email.mime.text        import MIMEText
 
-from django.views        import View
-from django.http         import JsonResponse
-from django.conf         import settings
-from django.db.models    import Q
+from django.core.exceptions import ValidationError
+from django.views           import View
+from django.http            import JsonResponse
+from django.conf            import settings
 
-from .models             import User, Follow
-from rooms.models        import UserRoomHistory
-from core.utils          import login_required
-from email.mime.text     import MIMEText
+from .models                import User, Follow
+from rooms.models           import UserRoomHistory
+from core.utils             import login_required
+from core.validator         import validates_email, validates_nickname, validates_password
 
 class DuplicateCheckView(View):
     def post(self, request):
         try:
-            email    = json.loads(request.body)['email']
-            nickname = json.loads(request.body)['nickname']
+            data = json.loads(request.body)
 
-            if not email and nickname == "":
-                return JsonResponse({"message" : "VALUE_ERROR"}, status=401)
+            email_check    = data.get('email', None)
+            nickname_check = data.get('nickname', None)
 
-            if User.objects.filter(Q(email = email)| Q(nickname = nickname)).exists():
-                return JsonResponse({"message" : "USER_ALREADY_EXISTS"}, status=401)
+            if email_check:
 
-            return JsonResponse({"message" : "AVAILABLE_USER"}, status=201)
+                validates_email(data['email'])
+
+                if User.objects.filter(email=data['email']).exists():
+                    return JsonResponse({"message" : "EMAIL_ALREADY_EXISTS"}, status=401)
+
+                return JsonResponse({"message": "AVAILABLE_EMAIL"}, status=201)
+            
+            if nickname_check:
+
+                validates_nickname(data['nickname'])
+
+                if User.objects.filter(nickname=data['nickname']).exists():
+                    return JsonResponse({"message" : "NICKNAME_ALREADY_EXISTS"}, status=401)
+                
+                return JsonResponse({"message": "AVAILABLE_NICKNAME"}, status=201)
 
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)
 
         except JSONDecodeError:
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
+
+        except ValidationError as e:
+            return JsonResponse({"message" : e.message}, status = 400)
 
 class SignupSendEmailView(View):
     def post(self, request):
@@ -100,6 +115,7 @@ class SignupView(View):
     def post(self, request):
         try:
             data = json.loads(request.body)
+            
             email         = data["email"]
             password      = data["password"]
             re_password   = data["re_password"]
@@ -107,18 +123,16 @@ class SignupView(View):
             receive_email = data["is_receive_email"]          
             nation        = data["nation"]
 
+            validates_email(email)
+            validates_password(password)
+            validates_nickname(nickname)
+
             if not email or not password or not re_password or not nickname or not nation:
                 return JsonResponse({"message" : "VALUE_ERROR"}, status=401)
 
             if password != re_password:
                 return JsonResponse({"message" : "PASSWORD_MISMATCH_ERROR"}, status=400)
 
-            if not re.match('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-_]+$', email):
-                return JsonResponse({"message" : "EMAIL_VALIDATION_ERROR"}, status=400)
-
-            if not re.match('^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~₩!@#$%^&*()\-_=+])[a-zA-Z0-9~!@#$%^&*()_\-+=]{8,17}$', password):
-                return JsonResponse({"message" : "PASSWORD_VALIDATION_ERROR"}, status=400)
-            
             if User.objects.filter(email=email).exists():
                 return JsonResponse({"message" : "EMAIL_ALREADY_EXISTS"}, status=400)
 
@@ -143,6 +157,9 @@ class SignupView(View):
 
         except JSONDecodeError:
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
+        
+        except ValidationError as e:
+            return JsonResponse({"message" : e.message}, status=400)
 
 class SigninView(View):
     def post(self, request):
@@ -181,14 +198,13 @@ class ResetPasswordView(View):
             password           = data["password"]
             re_password        = data["re_password"]
             reset_token_number = data["reset_token_number"]
-            
+
+            validates_password(password)
+
             user = User.objects.get(email=email)
 
             if password != re_password:
                 return JsonResponse({"message" : "PASSWORD_MISMATCH_ERROR"}, status = 400)
-
-            if not re.match('^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~₩!@#$%^&*()\-_=+])[a-zA-Z0-9~!@#$%^&*()_\-+=]{8,17}$', password):
-                return JsonResponse({"message" : "PASSWORD_VALIDATION_ERROR"}, status=400)
 
             if user.reset_token_number != reset_token_number:
                 return JsonResponse({"message" : "RESET_TOKEN_VALIDATION_ERROR"})
