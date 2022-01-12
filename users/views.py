@@ -1,37 +1,53 @@
 import json, re, bcrypt, jwt, uuid, requests, unicodedata, smtplib, boto3
-
 from json.decoder        import JSONDecodeError
 from email.mime.text     import MIMEText
 
 from django.views        import View
 from django.http         import JsonResponse
 from django.conf         import settings
-from django.db.models    import Q
-
+     
 from .models             import User, Follow
 from rooms.models        import UserRoomHistory
-from core.utils          import login_required
-from email.mime.text     import MIMEText
+from core.views          import login_required
 
-class DuplicateCheckView(View):
+
+class EmailDuplicateCheckView(View):
     def post(self, request):
         try:
-            email    = json.loads(request.body)['email']
-            nickname = json.loads(request.body)['nickname']
-
-            if not email and nickname == "":
+            email = json.loads(request.body)["email"]
+           
+            if not email:
                 return JsonResponse({"message" : "VALUE_ERROR"}, status=401)
 
-            if User.objects.filter(Q(email = email)| Q(nickname = nickname)).exists():
-                return JsonResponse({"message" : "USER_ALREADY_EXISTS"}, status=401)
-
-            return JsonResponse({"message" : "AVAILABLE_USER"}, status=201)
-
+            if User.objects.filter(email=email).exists():
+                return JsonResponse({"message" : "DUPLICATION_ERROR"}, status=401)
+            
+            return JsonResponse({"message" : "AVAILABLE_EMAIL"}, status=201)
+        
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)
 
         except JSONDecodeError:
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
+
+class NicknameDuplicateCheckView(View):
+    def post(self, request):
+        try:
+            nickname = json.loads(request.body)["nickname"]
+
+            if not nickname:
+                return JsonResponse({"message" : "VALUE_ERROR"}, status=401)
+            
+            if User.objects.filter(nickname=nickname).exists():
+                return JsonResponse({"message" : "DUPLICATION_ERROR"}, status=401)
+
+            return JsonResponse({"message" : "AVAILABLE_NICKNAME"}, status=201)    
+        
+        except KeyError:
+            return JsonResponse({"message" : "KEY_ERROR"}, status=401)
+
+        except JSONDecodeError:
+            return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)    
 
 class SignupSendEmailView(View):
     def post(self, request):
@@ -114,16 +130,16 @@ class SignupView(View):
                 return JsonResponse({"message" : "PASSWORD_MISMATCH_ERROR"}, status=400)
 
             if not re.match('^[a-zA-Z0-9+-_.]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-_]+$', email):
-                return JsonResponse({"message" : "EMAIL_VALIDATION_ERROR"}, status=400)
+                return JsonResponse({"message" : "EMAIL_OR_PASSWORD_VALIDATION_ERROR"}, status=400)
 
             if not re.match('^(?=.*[a-zA-Z])(?=.*[0-9])(?=.*[~₩!@#$%^&*()\-_=+])[a-zA-Z0-9~!@#$%^&*()_\-+=]{8,17}$', password):
-                return JsonResponse({"message" : "PASSWORD_VALIDATION_ERROR"}, status=400)
+                return JsonResponse({"message" : "EMAIL_OR_PASSWORD_VALIDATION_ERROR"}, status=400)
             
             if User.objects.filter(email=email).exists():
-                return JsonResponse({"message" : "EMAIL_ALREADY_EXISTS"}, status=400)
+                return JsonResponse({"message" : "DUPLICATION_ERROR"}, status=400)
 
             if User.objects.filter(nickname=nickname).exists():
-                return JsonResponse({"message" : "NICKNAME_ALREADY_EXISTS"}, status=400)
+                return JsonResponse({"message" : "DUPLICATION_ERROR"}, status=400)
 
             hashed_password = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
 
@@ -255,7 +271,7 @@ class GoogleSignInView(View):
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
 
         except KeyError:
-            return JsonResponse({"message" : "KEY_ERROR"}, status = 400)
+          return JsonResponse({"message" : "KEY_ERROR"}, status = 400)
 
 class NaverSignInView(View):
     def get(self, request):
@@ -307,7 +323,7 @@ class NaverSignInView(View):
             return JsonResponse({"message" : "JSON_DECODE_ERROR"}, status=400)
 
         except KeyError:
-            return JsonResponse({"message" : "KEY_ERROR"}, safe=False, status = 400)
+          return JsonResponse({"message" : "KEY_ERROR"}, safe=False, status = 400)
 
 class UserFollowView(View):
     @login_required
@@ -409,7 +425,7 @@ class UserProfileView(View):
 
             if nickname == "":
                 return JsonResponse({"message" : "VALUES_ERROR"}, status = 400)   
-
+ 
             if nation != None:
                 user.nation = nation
                 user.save()
@@ -426,7 +442,7 @@ class UserProfileView(View):
                 upload_key = str(uuid.uuid4().hex[:10]) + image.name
 
                 s3_client = boto3.client(
-                    "s3",
+                   "s3",
                     aws_access_key_id     = settings.AWS_IAM_ACCESS_KEY,
                     aws_secret_access_key = settings.AWS_IAM_SECRET_KEY
                 )
