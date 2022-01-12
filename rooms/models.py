@@ -13,6 +13,7 @@ class Room(TimeStampModel):
     rooms_contents   = models.ManyToManyField('contents.Content', through="RoomContent", related_name="rooms")
     running_time     = models.CharField(max_length=20, null=True)
     status           = models.BooleanField(default=False)
+    maximum_limit    = models.IntegerField()
     
     class Meta:
         db_table = 'rooms'
