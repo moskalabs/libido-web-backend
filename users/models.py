@@ -23,12 +23,12 @@ class User(TimeStampModel):
         db_table = 'users'
 
 
-class Follow(models.Model):
+class Follow(TimeStampModel):
     users    = models.ForeignKey('user', on_delete=models.CASCADE, related_name='follow_by_users')
-    followed = models.ForeignKey('user', on_delete=models.CASCADE, related_name='foolow_by_followed')
+    followed = models.ForeignKey('user', on_delete=models.CASCADE, related_name='follow_by_followed')
 
     class Meta:
         db_table = 'follows'
         constraints = [
-            models.UniqueConstraint(fields=['follwed_id', 'users_id'], name='unique_follows')
+            models.UniqueConstraint(fields=['followed_id', 'users_id'], name='unique_follows')
         ]
