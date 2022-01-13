@@ -1,9 +1,22 @@
+import secrets
 from django.db import models
 
 from core.models import TimeStampModel
 
 
+def _generate_room_random_id(_len=35):
+    return secrets.token_urlsafe(_len)
+
+
 class Room(TimeStampModel):
+    # 방의 아이디는 random hash로 처리한다 (보안이슈)
+    id = models.CharField(
+        db_index=True,
+        max_length=55,
+        default=_generate_room_random_id,
+        primary_key=True,
+    )
+
     title = models.CharField(max_length=100)
     description = models.TextField(null=True)
     is_public = models.BooleanField()
@@ -43,4 +56,3 @@ class RoomContent(TimeStampModel):
 
     class Meta:
         db_table = "room_contents"
-

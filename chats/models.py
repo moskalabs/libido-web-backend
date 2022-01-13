@@ -45,6 +45,7 @@ class ThingChatRoomType(models.IntegerChoices):
 
 
 class ChatRoom(models.Model):
+    #  해당모델 사용안할것임
     id = models.CharField(
         db_index=True,
         max_length=55,
