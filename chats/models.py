@@ -76,7 +76,7 @@ class ChatRoom(models.Model):
 
 class Message(models.Model):
     username = models.CharField(max_length=255)
-    chat_room = models.CharField(max_length=255)
+    room = models.CharField(max_length=255)
     content = models.TextField()
 
     created_at = models.DateTimeField(

@@ -3,8 +3,9 @@ from rest_framework import viewsets
 from rest_framework.filters import OrderingFilter, SearchFilter
 from django_filters.rest_framework import DjangoFilterBackend
 
+from rooms.models import Room
 from chats.models import Message, ChatRoom
-from chats.serializers import MessageSerializer, ChatRoomSerializer
+from chats.serializers import MessageSerializer, ChatRoomSerializer, RoomSerializer
 from commons.paginations import CommonPagination
 
 
@@ -26,8 +27,8 @@ class ChatRoomsViewSet(viewsets.ModelViewSet):
         # permissions.AllowRetriveList,
     ]
     # renderer_classes = [LibidoApiJSONRenderer]
-    queryset = ChatRoom.objects.all().order_by("-id")
-    serializer_class = ChatRoomSerializer
+    queryset = Room.objects.all().order_by("-id")
+    serializer_class = RoomSerializer
     pagination_class = CommonPagination
     filter_backends = (
         DjangoFilterBackend,
