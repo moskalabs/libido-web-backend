@@ -79,7 +79,6 @@ class Message(models.Model):
     username = models.CharField(max_length=255)
     room = models.CharField(max_length=255)
     content = models.TextField()
-
     created_at = models.DateTimeField(
         verbose_name="작성한 시간",
         db_index=True,

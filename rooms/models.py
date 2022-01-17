@@ -9,7 +9,6 @@ def _generate_room_random_id(_len=35):
 
 
 class Room(TimeStampModel):
-    # 방의 아이디는 random hash로 처리한다 (보안이슈)
     id = models.CharField(
         db_index=True,
         max_length=55,
@@ -21,14 +20,31 @@ class Room(TimeStampModel):
     description = models.TextField(null=True)
     is_public = models.BooleanField()
     password = models.CharField(max_length=50)
+    user_count = models.PositiveIntegerField(
+        null=True, blank=True, default=0, help_text="접속한 사람수"
+    )
+
+    # 채팅관련 테스트 떄문에 null=True, blank=True 로 설정했습니다
     users = models.ForeignKey(
-        "users.User", on_delete=models.CASCADE, related_name="rooms"
+        "users.User",
+        on_delete=models.CASCADE,
+        related_name="rooms",
+        blank=True,
+        null=True,
     )
     room_categories = models.ForeignKey(
-        "RoomCategory", on_delete=models.CASCADE, related_name="rooms"
+        "RoomCategory",
+        on_delete=models.CASCADE,
+        related_name="rooms",
+        blank=True,
+        null=True,
     )
     rooms_contents = models.ManyToManyField(
-        "contents.Content", through="RoomContent", related_name="rooms"
+        "contents.Content",
+        through="RoomContent",
+        related_name="rooms",
+        blank=True,
+        null=True,
     )
 
     class Meta:

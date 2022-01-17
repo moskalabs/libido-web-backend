@@ -78,11 +78,13 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
 
     @sync_to_async
     def create_room(self, room_id):
-        Room.objects.get_or_create(id=room_id, is_public=True)
+        room = Room.objects.get_or_create(id=room_id, is_public=True)
+        print(room)
 
     @sync_to_async
     def save_message(self, username, room, message):
-        Message.objects.create(username=username, room=room, content=message)
+        msg = Message.objects.create(username=username, room=room, content=message)
+        print(msg)
 
 
 class PrivateChatConsumer(AsyncWebsocketConsumer):
