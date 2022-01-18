@@ -45,7 +45,7 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         # create room
-        await self.create_room(room_id=self.room_name)
+        await self.create_room(room_title=self.room_name)
 
     async def disconnect(self, close_code):
         # Leave room
@@ -77,8 +77,8 @@ class GroupChatConsumer(AsyncWebsocketConsumer):
         )
 
     @sync_to_async
-    def create_room(self, room_id):
-        room = Room.objects.get_or_create(id=room_id, is_public=True)
+    def create_room(self, room_title):
+        room = Room.objects.get_or_create(title=room_title, is_public=True)
         print(room)
 
     @sync_to_async
@@ -98,7 +98,7 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         await self.accept()
 
         # create room
-        await self.create_room(room_id=self.room_name)
+        await self.create_room(room_title=self.room_name)
 
     async def disconnect(self, close_code):
         # Leave room
@@ -130,8 +130,8 @@ class PrivateChatConsumer(AsyncWebsocketConsumer):
         )
 
     @sync_to_async
-    def create_room(self, room_id):
-        Room.objects.get_or_create(id=room_id, is_public=False)
+    def create_room(self, room_title):
+        Room.objects.get_or_create(title=room_title, is_public=False)
 
     @sync_to_async
     def save_message(self, username, room, message):
