@@ -1,4 +1,4 @@
-import json, re, bcrypt, jwt, uuid, requests, unicodedata, smtplib, boto3
+import json, re, bcrypt, jwt, uuid, requests, unicodedata, smtplib, boto3, datetime
 
 from json.decoder           import JSONDecodeError
 from email.mime.text        import MIMEText
@@ -488,3 +488,86 @@ class UserProfileView(View):
 
         except KeyError:
             return JsonResponse({"message" : "KEY_ERROR"}, status=401)
+
+class MypageDataView(View):
+    @login_required
+    def get(self, request):
+        user                = User.objects.get(id=request.user.id)
+        period              = request.GET.get('period', '')
+        today               = datetime.date.today()  # 마이페이지 조회 당일의 날짜
+        monday_of_this_week = today - datetime.timedelta(days=today.weekday())  # 그 주 월요일
+        
+        if period == 'daily':
+            date_list         = [monday_of_this_week + datetime.timedelta(days=i) for i in range(7)]  # 그 주 월요일부터 일요일까지의 날짜가 담긴 리스트
+            friends_increment = [user.follow_by_users.filter(created_at__date=date).count() for date in date_list]  # 요일별 친구 증가 수가 담긴 리스트
+            tags              = [tag.name for room in user.user_histories.filter(created_at__lte=date_list[-1], created_at__gte=date_list[0]) \
+                for content in room.rooms_contents.all() \
+                for tag in content.content_tags.all() \
+            ]  # 그 주 동안 스트리밍 방에서 봤던 컨텐츠들의 태그가 담긴 리스트
+
+            result = {
+                "friends_increment"       : friends_increment,
+                "total_friends_increment" : sum(friends_increment),
+                # "watching_time"           : 방 나간 시간을 알 수 없으므로 구할 수 없다.
+                # "total_watching_time"     : 방 나간 시간을 알 수 없으므로 구할 수 없다.
+                "the_number_of_streaming" : user.rooms.filter(created_at__lte=date_list[-1], created_at__gte=date_list[0]).count(),
+                "most_genre"              : max(tags, key=tags.count)
+            }
+
+            return JsonResponse({"message" : "SUCCESS", "result" : result}, status = 200)
+
+        elif period == 'weekly':
+            def get_week_no():  # 조회하는 날짜가 속한 주가 한 달 중에서 몇 주차인치 구하는 함수. 지금 이 함수는 일요일부터 토요일까지를 한 주로 보고 있는데 월요일부터 일요일까지가 한 주가 되도록 수정해야한다.
+                firstday = today.replace(day=1)
+                if firstday.weekday() == 6:
+                    origin = firstday
+                elif firstday.weekday() < 3:
+                    origin = firstday - datetime.timedelta(days=firstday.weekday() + 1)
+                else:
+                    origin = firstday + datetime.timedelta(days=6-firstday.weekday())
+                return (today - origin).days // 7 + 1
+
+            nth_week            = get_week_no()
+            first_momday        = monday_of_this_week - datetime.timedelta(weeks=nth_week-1)  # 1주차 월요일의 날짜
+            first_sunday        = start_momday + datetime.timedelta(days=6)  # 1주차 일요일의 날짜
+            monday_list         = [first_momday + datetime.timedelta(weeks=i) for i in range(4)]  # 1주차부터 4주차까지의 월요일 날짜가 담긴 리스트. 5주차가 존재하는 달에 대해서는 구현하지 못했다.
+            sunday_list         = [first_sunday + datetime.timedelta(weeks=i) for i in range(4)]  # 1주차부터 4주차까지의 일요일 날짜가 담긴 리스트. 5주차가 존재하는 달에 대해서는 구현하지 못했다.
+
+            friends_increment   = [user.follow_by_users.filter(created_at__lte=sunday_list[i], created_at__gte=monday_list[i]).count() for i in range(4)]  # 주차별 친구 증가 수가 담긴 리스트
+            tags                = [tag.name for room in user.user_histories.filter(created_at__lte=sunday_list[-1], created_at__gte=monday_list[0]) \
+                for content in room.rooms_contents.all() \
+                for tag in content.content_tags.all() \
+            ]  # 한 달 동안 스트리밍 방에서 봤던 컨텐츠들의 태그가 담긴 리스트
+        
+            result = {
+                "friends_increment"       : friends_increment,
+                "total_friends_increment" : sum(friends_increment),
+                # "watching_time"           : 방 나간 시간을 알 수 없으므로 구할 수 없다.
+                # "total_watching_time"     : 방 나간 시간을 알 수 없으므로 구할 수 없다.
+                "the_number_of_streaming" : user.rooms.filter(created_at__lte=sunday_list[-1], created_at__gte=monday_list[0]).count(),
+                "most_genre"              : max(tags, key=tags.count)
+            }
+
+            return JsonResponse({"message" : "SUCCESS", "result" : result}, status = 200)
+
+        elif period == 'monthly':
+            this_month        = today.month  # 조회하는 날짜가 속한 달
+            this_year         = today.year  # 조회하는 날짜가 속한 년
+            month_list        = [i for i in range(1, 13)]  # 1월부터 12월
+            friends_increment = [user.follow_by_users.filter(created_at__year=year, created_at__month=month).count() for month in month_list]  # 월별 친구 증가 수가 담긴 리스트
+            tags              = [tag.name for room in user.user_histories.filter( \
+                created_at__year=year, created_at__lte=month_list[-1], created_at__gte=month_list[0]) \
+                for content in room.rooms_contents.all() \
+                for tag in content.content_tags.all() \
+            ]  # 일 년 동안 스트리밍 방에서 봤던 컨텐츠들의 태그가 담긴 리스트
+
+            result = {
+                "friends_increment"       : friends_increment,
+                "total_friends_increment" : sum(friends_increment),
+                # "watching_time"           : 방 나간 시간을 알 수 없으므로 구할 수 없다.
+                # "total_watching_time"     : 방 나간 시간을 알 수 없으므로 구할 수 없다.
+                "the_number_of_streaming" : user.rooms.filter(created_at__year=year, created_at__lte=month_list[-1], created_at__gte=month_list[0]).count(),
+                "most_genre"              : max(tags, key=tags.count)
+            }
+
+            return JsonResponse({"message" : "SUCCESS", "result" : result}, status = 200)
