@@ -588,8 +588,7 @@ class FollowViewSet(BaseViewSet):
     search_fields = __basic_fields
 
     def get_queryset(self):
-        if not self.request.user.is_anonymous:
-            # 비로그인인경우 (테스트를위함)
+        if isinstance(self.request.user, User):
             qs = super().get_queryset().filter(users=self.request.user).order_by("-id")
             return qs
         qs = super().get_queryset().order_by("-id")
