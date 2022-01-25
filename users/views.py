@@ -18,6 +18,8 @@ from users.models import User, Follow
 from rooms.models import UserRoomHistory
 from core.views import login_required
 from commons.paginations import CommonPagination
+from commons.authentication import JWTAuthentication
+from commons.permissions import IsAuthenticated
 
 from users.serializers import UserSerializer, FollowSerializer
 
@@ -568,13 +570,14 @@ class UserProfileView(View):
 class FollowViewSet(BaseViewSet):
     __basic_fields = (
         "id",
-        "users__username",
-        "followed__username",
+        "users",
+        "followed",
         "created_at",
     )
 
     queryset = Follow.objects.all().order_by("-id")
-    # permission_classes = []
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     # renderer_classes = []
     pagination_class = CommonPagination
     serializer_action_classes = {
