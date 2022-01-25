@@ -4,12 +4,12 @@ from django.urls import path
 from rest_framework.routers import DefaultRouter
 from rest_framework_nested.routers import NestedSimpleRouter
 
-from users.views import UserViewSet
+from users.views import FollowViewSet
 
 
-user_router = DefaultRouter(trailing_slash=False)
-user_router.register(r"users", UserViewSet, basename="user")
+follow_router = DefaultRouter(trailing_slash=False)
+follow_router.register(r"followers", FollowViewSet, basename="follow")
 
 urlpatterns = [
-    url(r"^", include(user_router.urls)),
+    url(r"^", include(follow_router.urls)),
 ]

@@ -23,7 +23,8 @@ from users.serializers import UserSerializer, FollowSerializer
 
 class BaseViewSet(
     # mixins.CreateModelMixin,
-    # mixins.RetrieveModelMixin, # retrive open -> user_id retrive
+    mixins.RetrieveModelMixin,  # retrive open -> user_id retrive
+    mixins.ListModelMixin,  # retrive open -> user_id retrive
     # mixins.UpdateModelMixin,
     # mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
@@ -560,13 +561,14 @@ class UserProfileView(View):
         except KeyError:
             return JsonResponse({"message": "KEY_ERROR"}, status=401)
 
+    queryset = Follow.objects.all()
 
-class UserViewSet(BaseViewSet):
-    queryset = User.objects.all()
+
+class FollowViewSet(BaseViewSet):
     permission_classes = []
     renderer_classes = []
     serializer_action_classes = {
-        "list": UserSerializer,
+        "list": FollowSerializer,
     }
 
     def get_serializer_class(self):
@@ -574,15 +576,6 @@ class UserViewSet(BaseViewSet):
             return self.serializer_action_classes[self.action]
         except KeyError:
             return UserSerializer
-
-    @swagger_auto_schema(method="GET", responses={status.HTTP_200_OK: FollowSerializer})
-    @action(methods=["GET"], detail=False, url_path="followers", permission_classes=[])
-    def followers(self, request):
-        user = request.user
-        serializers = FollowSerializer(
-            instance=user.followers, allow_null=True, many=True
-        )
-        return Response(serializers.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
         method="post",
@@ -596,8 +589,8 @@ class UserViewSet(BaseViewSet):
         ),
         responses={status.HTTP_200_OK: FollowSerializer},
     )
-    @action(methods=["POST"], detail=False, url_path="follow", permission_classes=[])
-    def follow(self, request):
+    @action(methods=["POST"], detail=False, url_path="add", permission_classes=[])
+    def add(self, request):
         followed_id = request.data["followed_id"]
         user_id = request.user.id
         follow = User.follow(user_id=user_id, followed_user_id=followed_id)
@@ -616,8 +609,8 @@ class UserViewSet(BaseViewSet):
         ),
         responses={status.HTTP_200_OK: FollowSerializer},
     )
-    @action(methods=["POST"], detail=False, url_path="unfollow", permission_classes=[])
-    def unfollow(self, request):
+    @action(methods=["POST"], detail=False, url_path="rm", permission_classes=[])
+    def remove(self, request):
         followed_id = request.data["followed_id"]
         user_id = request.user.id
         User.unfollow(user_id=user_id, followed_user_id=followed_id)
