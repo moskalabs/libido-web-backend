@@ -6,6 +6,8 @@ from django.contrib import admin
 from drf_yasg import openapi
 from drf_yasg.views import get_schema_view
 
+import users.v2_urls as v2_user_urls
+
 
 schema_view = get_schema_view(
     openapi.Info(
@@ -22,6 +24,7 @@ schema_view = get_schema_view(
 )
 
 urlpatterns = [
+    url(r"^v2/", include(v2_user_urls)),
     path("contents", include("contents.urls")),
     path("users", include("users.urls")),
     path("rooms", include("rooms.urls")),
