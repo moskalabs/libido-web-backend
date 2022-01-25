@@ -613,7 +613,12 @@ class FollowViewSet(BaseViewSet):
         ),
         responses={status.HTTP_200_OK: FollowSerializer},
     )
-    @action(methods=["POST"], detail=False, url_path="add", permission_classes=[])
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="add",
+        permission_classes=[IsAuthenticated],
+    )
     def add(self, request):
         followed_id = request.data["followed_id"]
         user_id = request.user.id
@@ -633,7 +638,12 @@ class FollowViewSet(BaseViewSet):
         ),
         responses={status.HTTP_200_OK: FollowSerializer},
     )
-    @action(methods=["POST"], detail=False, url_path="rm", permission_classes=[])
+    @action(
+        methods=["POST"],
+        detail=False,
+        url_path="rm",
+        permission_classes=[IsAuthenticated],
+    )
     def remove(self, request):
         followed_id = request.data["followed_id"]
         user_id = request.user.id
