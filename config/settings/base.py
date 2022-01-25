@@ -180,3 +180,13 @@ CRONJOBS = [
         ">> " + os.path.join(BASE_DIR, "config/log/cron.log"),
     )
 ]
+
+SWAGGER_SETTINGS = {
+    "SECURITY_DEFINITIONS": {
+        "Bearer": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header",
+        },
+    }
+}
