@@ -17,6 +17,7 @@ from django.conf import settings
 from users.models import User, Follow
 from rooms.models import UserRoomHistory
 from core.views import login_required
+from commons.paginations import CommonPagination
 
 from users.serializers import UserSerializer, FollowSerializer
 
@@ -565,11 +566,31 @@ class UserProfileView(View):
 
 
 class FollowViewSet(BaseViewSet):
-    permission_classes = []
-    renderer_classes = []
+    __basic_fields = (
+        "id",
+        "users__username",
+        "followed__username",
+        "created_at",
+    )
+
+    queryset = Follow.objects.all().order_by("-id")
+    # permission_classes = []
+    # renderer_classes = []
+    pagination_class = CommonPagination
     serializer_action_classes = {
         "list": FollowSerializer,
     }
+
+    filter_fields = __basic_fields
+    search_fields = __basic_fields
+
+    def get_queryset(self):
+        if not self.request.user.is_anonymous:
+            # 비로그인인경우 (테스트를위함)
+            qs = super().get_queryset().filter(users=self.request.user).order_by("-id")
+            return qs
+        qs = super().get_queryset().order_by("-id")
+        return qs
 
     def get_serializer_class(self):
         try:
