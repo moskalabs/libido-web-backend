@@ -49,8 +49,8 @@ class Follow(models.Model):
     def add(cls, user_id, followed_user_id):
         # exception 및 예외처리 구현 필요
         follow = cls.objects.create(
-            users=user_id,
-            followed=followed_user_id,
+            users_id=user_id,
+            followed_id=followed_user_id,
         )
         return follow
 
@@ -58,8 +58,8 @@ class Follow(models.Model):
     def remove(cls, user_id, followed_user_id):
         # exception 및 예외처리 구현 필요
         follow = cls.objects.get(
-            users=user_id,
-            followed=followed_user_id,
+            users_id=user_id,
+            followed_id=followed_user_id,
         )
         follow.delete()
         return True
