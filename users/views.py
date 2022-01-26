@@ -621,7 +621,7 @@ class FollowViewSet(BaseViewSet):
     def add(self, request):
         followed_id = request.data["followed_id"]
         user_id = request.user.id
-        follow = User.follow(user_id=user_id, followed_user_id=followed_id)
+        follow = Follow.add(user_id=user_id, followed_user_id=followed_id)
         serializers = FollowSerializer(instance=follow, allow_null=True)
         return Response(serializers.data, status=status.HTTP_200_OK)
 
@@ -646,5 +646,5 @@ class FollowViewSet(BaseViewSet):
     def remove(self, request):
         followed_id = request.data["followed_id"]
         user_id = request.user.id
-        User.unfollow(user_id=user_id, followed_user_id=followed_id)
+        Follow.remove(user_id=user_id, followed_user_id=followed_id)
         return Response(None, status=status.HTTP_204_NO_CONTENT)

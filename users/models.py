@@ -46,7 +46,7 @@ class Follow(models.Model):
     )
 
     @classmethod
-    def follow(cls, user_id, followed_user_id):
+    def add(cls, user_id, followed_user_id):
         # exception 및 예외처리 구현 필요
         follow = cls.objects.create(
             users=user_id,
@@ -55,7 +55,7 @@ class Follow(models.Model):
         return follow
 
     @classmethod
-    def unfollow(cls, user_id, followed_user_id):
+    def remove(cls, user_id, followed_user_id):
         # exception 및 예외처리 구현 필요
         follow = cls.objects.get(
             users=user_id,
