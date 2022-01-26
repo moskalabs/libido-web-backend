@@ -606,7 +606,7 @@ class FollowViewSet(BaseViewSet):
             type=openapi.TYPE_OBJECT,
             properties={
                 "followed_id": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="팔로우 할 유저 PK"
+                    type=openapi.TYPE_INTEGER, description="팔로우 할 유저 PK"
                 ),
             },
         ),
@@ -623,6 +623,7 @@ class FollowViewSet(BaseViewSet):
         user_id = request.user.id
         follow = Follow.add(user_id=user_id, followed_user_id=followed_id)
         serializers = FollowSerializer(instance=follow, allow_null=True)
+        __import__("ipdb").set_trace()
         return Response(serializers.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
@@ -631,7 +632,7 @@ class FollowViewSet(BaseViewSet):
             type=openapi.TYPE_OBJECT,
             properties={
                 "followed_id": openapi.Schema(
-                    type=openapi.TYPE_STRING, description="언팔로우 할 유저 PK"
+                    type=openapi.TYPE_INTEGER, description="언팔로우 할 유저 PK"
                 ),
             },
         ),

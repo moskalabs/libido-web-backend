@@ -46,12 +46,20 @@ class Follow(models.Model):
     )
 
     @property
-    def followed_username(self):
-        return self.followed.username
+    def followed_name(self):
+        return self.followed.name
 
     @property
-    def users_username(self):
-        return self.users.username
+    def followed_nickname(self):
+        return self.followed.nickname
+
+    @property
+    def users_name(self):
+        return self.users.name
+
+    @property
+    def users_nickname(self):
+        return self.users.nickname
 
     @classmethod
     def add(cls, user_id, followed_user_id):
