@@ -605,7 +605,7 @@ class FollowViewSet(BaseViewSet):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                "user_id": openapi.Schema(
+                "followed_id": openapi.Schema(
                     type=openapi.TYPE_STRING, description="팔로우 할 유저 PK"
                 ),
             },
@@ -630,7 +630,7 @@ class FollowViewSet(BaseViewSet):
         request_body=openapi.Schema(
             type=openapi.TYPE_OBJECT,
             properties={
-                "user_id": openapi.Schema(
+                "followed_id": openapi.Schema(
                     type=openapi.TYPE_STRING, description="언팔로우 할 유저 PK"
                 ),
             },
