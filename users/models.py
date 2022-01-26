@@ -36,7 +36,7 @@ class Follow(models.Model):
         "user", on_delete=models.CASCADE, related_name="follow_by_users"
     )
     followed = models.ForeignKey(
-        "user", on_delete=models.CASCADE, related_name="foolow_by_followed"
+        "user", on_delete=models.CASCADE, related_name="follow_by_followed"
     )
 
     created_at = models.DateTimeField(
@@ -44,6 +44,14 @@ class Follow(models.Model):
         default=timezone.localtime,
         help_text="팔로우 추가한 시간",
     )
+
+    @property
+    def followed_username(self):
+        return self.followed.username
+
+    @property
+    def users_username(self):
+        return self.users.username
 
     @classmethod
     def add(cls, user_id, followed_user_id):

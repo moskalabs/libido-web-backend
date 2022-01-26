@@ -11,6 +11,16 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FollowSerializer(serializers.ModelSerializer):
+    users_username = serializers.ReadOnlyField(allow_null=True)
+    followed_username = serializers.ReadOnlyField(allow_null=True)
+
     class Meta:
         model = Follow
-        fields = "__all__"
+        fields = [
+            "id",
+            "users",
+            "followed",
+            "users_username",
+            "followed_username",
+            "created_at",
+        ]
