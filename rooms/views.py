@@ -6,7 +6,20 @@ from django.views import View
 from django.db.models import Q
 from django.contrib.admin.utils import flatten
 
+
+from drf_yasg import openapi
+from drf_yasg.utils import swagger_auto_schema
+
+from rest_framework import mixins, viewsets, status
+from rest_framework.decorators import action
+from rest_framework.filters import OrderingFilter, SearchFilter
+from rest_framework.response import Response
+
+from commons.paginations import CommonPagination
+from commons.permissions import AllowRetriveList
+
 from rooms.models import Room, RoomCategory
+from rooms.serializers import RoomSerializer
 from users.models import User, Follow
 from contents.models import Content
 from chats.models import Message
@@ -130,3 +143,24 @@ def room(request, room_name):
         "rooms/room.html",
         {"room_name": room_name, "username": username, "messages": messages},
     )
+
+
+class RoomViewSet(viewsets.ModelViewSet):
+    __basic_fields = ("id", "title", "description", "user_count", "created_at")
+    # authentication_classes = [JWTAuthentication]
+    queryset = Room.objects.all().order_by("-id")
+    permission_classes = [AllowRetriveList]
+    # renderer_classes = []
+    pagination_class = CommonPagination
+    serializer_action_classes = {
+        "list": RoomSerializer,
+    }
+
+    filter_fields = __basic_fields
+    search_fields = __basic_fields
+
+    def get_serializer_class(self):
+        try:
+            return self.serializer_action_classes[self.action]
+        except KeyError:
+            return RoomSerializer
