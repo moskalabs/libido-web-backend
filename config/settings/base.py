@@ -23,7 +23,7 @@ ALLOWED_HOSTS = ["*"]
 # Application definition
 DJANGO_APPS = [
     "django.contrib.admin",
-    "django.contrib.auth",  # channels  사용시 꼭 auth 필요
+    "django.contrib.auth",  # 기본적으로 django 사용하려면 auth 사용필요
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
@@ -136,6 +136,8 @@ USE_L10N = True
 
 USE_TZ = True
 
+
+# TODO -> 이부분 주석으로인해서 디비테이블이 2개로 연결됨
 # AUTH_USER_MODEL = "users.User"
 
 
