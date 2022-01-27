@@ -73,7 +73,7 @@ class Follow(models.Model):
     @classmethod
     def remove(cls, user_id, followed_user_id):
         # exception 및 예외처리 구현 필요
-        follow = cls.objects.get(
+        follow = cls.objects.filter(
             users_id=user_id,
             followed_id=followed_user_id,
         )
