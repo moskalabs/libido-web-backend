@@ -26,6 +26,17 @@ from chats.models import Message
 from core.views import login_required
 
 
+class BaseViewSet(
+    # mixins.CreateModelMixin,
+    mixins.RetrieveModelMixin,  # retrive open -> user_id retrive
+    mixins.ListModelMixin,  # retrive open -> user_id retrive
+    # mixins.UpdateModelMixin,
+    # mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
+):
+    pass
+
+
 class RoomListView(View):
     @login_required
     def get(self, request):
@@ -145,7 +156,7 @@ def room(request, room_name):
     )
 
 
-class RoomViewSet(viewsets.ModelViewSet):
+class RoomViewSet(BaseViewSet):
     __basic_fields = ("id", "title", "description", "user_count", "created_at")
     # authentication_classes = [JWTAuthentication]
     queryset = Room.objects.all().order_by("-id")
