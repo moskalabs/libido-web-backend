@@ -14,6 +14,7 @@ from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import action
 from rest_framework.filters import OrderingFilter, SearchFilter
 from rest_framework.response import Response
+from django_filters.rest_framework import DjangoFilterBackend
 
 from commons.paginations import CommonPagination
 from commons.permissions import AllowRetriveList
@@ -166,6 +167,12 @@ class RoomViewSet(BaseViewSet):
     serializer_action_classes = {
         "list": RoomSerializer,
     }
+
+    filter_backends = (
+        DjangoFilterBackend,
+        SearchFilter,
+        OrderingFilter,
+    )
 
     filter_fields = __basic_fields
     search_fields = __basic_fields
