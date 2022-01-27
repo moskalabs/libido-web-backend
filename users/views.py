@@ -623,7 +623,6 @@ class FollowViewSet(BaseViewSet):
         user_id = request.user.id
         follow = Follow.add(user_id=user_id, followed_user_id=followed_id)
         serializers = FollowSerializer(instance=follow, allow_null=True)
-        __import__("ipdb").set_trace()
         return Response(serializers.data, status=status.HTTP_200_OK)
 
     @swagger_auto_schema(
