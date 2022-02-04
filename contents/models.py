@@ -21,6 +21,14 @@ class Content(TimeStampModel):
         "Tag", through="ContentTag", related_name="contents"
     )
 
+    @property
+    def category(self):
+        return self.content_categories
+
+    @property
+    def tags(self):
+        return self.content_tags.filter()
+
     class Meta:
         db_table = "contents"
 

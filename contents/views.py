@@ -148,12 +148,12 @@ class ContentViewSet(BaseViewSet):
         "channel_id",
         "channel_title",
         "published_at",
-        "content_categories",
-        "content_tags",
+        "content_categories__name",
+        "content_tags__name",
     )
     queryset = Content.objects.all().order_by("-id")
-    authentication_classes = [JWTAuthentication]
-    permission_classes = [IsAuthenticated]
+    # authentication_classes = [JWTAuthentication]
+    # permission_classes = [IsAuthenticated]
     pagination_class = CommonPagination
     serializer_action_classes = {
         "list": ContentSerializer,
