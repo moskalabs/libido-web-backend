@@ -17,9 +17,11 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 
 from commons.paginations import CommonPagination
-from commons.permissions import AllowRetriveList
+from commons.authentication import JWTAuthentication
+from commons.permissions import AllowRetriveList, IsAuthenticated
 
 from rooms.models import Room, RoomCategory
+from commons.permissions import IsAuthenticated
 from rooms.serializers import RoomSerializer
 from users.models import User, Follow
 from contents.models import Content
@@ -28,11 +30,11 @@ from core.views import login_required
 
 
 class BaseViewSet(
-    # mixins.CreateModelMixin,
+    mixins.CreateModelMixin,
     mixins.RetrieveModelMixin,  # retrive open -> user_id retrive
     mixins.ListModelMixin,  # retrive open -> user_id retrive
-    # mixins.UpdateModelMixin,
-    # mixins.DestroyModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
     pass
@@ -159,10 +161,9 @@ def room(request, room_name):
 
 class RoomViewSet(BaseViewSet):
     __basic_fields = ("id", "title", "description", "user_count", "created_at")
-    # authentication_classes = [JWTAuthentication]
     queryset = Room.objects.all().order_by("-id")
-    permission_classes = [AllowRetriveList]
-    # renderer_classes = []
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsAuthenticated]
     pagination_class = CommonPagination
     serializer_action_classes = {
         "list": RoomSerializer,
