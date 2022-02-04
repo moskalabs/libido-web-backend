@@ -8,6 +8,7 @@ from drf_yasg.views import get_schema_view
 
 import users.v2_urls as v2_user_urls
 import rooms.v2_urls as v2_room_urls
+import contents.v2_urls as v2_content_urls
 
 
 schema_view = get_schema_view(
@@ -27,6 +28,7 @@ schema_view = get_schema_view(
 urlpatterns = [
     url(r"^v2/", include(v2_user_urls)),
     url(r"^v2/", include(v2_room_urls)),
+    url(r"^v2/", include(v2_content_urls)),
     path("contents", include("contents.urls")),
     path("users", include("users.urls")),
     path("rooms", include("rooms.urls")),
