@@ -160,7 +160,14 @@ def room(request, room_name):
 
 
 class RoomViewSet(BaseViewSet):
-    __basic_fields = ("id", "title", "description", "user_count", "created_at")
+    __basic_fields = (
+        "id",
+        "title",
+        "description",
+        "user_count",
+        "created_at",
+        "room_categories__name",
+    )
     queryset = Room.objects.all().order_by("-id")
     authentication_classes = [JWTAuthentication]
     permission_classes = [IsAuthenticated]

@@ -47,6 +47,14 @@ class Room(TimeStampModel):
         null=True,
     )
 
+    @property
+    def category(self):
+        return self.room_categories
+
+    @property
+    def contents(self):
+        return self.rooms_contents.filter()
+
     class Meta:
         db_table = "rooms"
 
